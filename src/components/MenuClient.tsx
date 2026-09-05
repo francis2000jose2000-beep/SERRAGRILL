@@ -35,7 +35,7 @@ function parsePrice(item: any): string {
     rawPrice = item.prices[0].value || item.prices[0].gross_price || 0;
   }
 
-  const num = parseFloat(rawPrice);
+  const num = parseFloat(String(rawPrice));
   return isNaN(num) || num === 0 ? '0.00 €' : `${num.toFixed(2)} €`;
 }
 
