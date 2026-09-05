@@ -6,8 +6,6 @@ const nextConfig = {
     return config;
   },
   typescript: {
-    // Ensure path aliases are resolved correctly
-    configPath: './tsconfig.json',
   },
 };
 
