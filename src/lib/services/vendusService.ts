@@ -1,4 +1,4 @@
-const VENDUS_API_BASE = 'https://api.vendus.pt/v1.1/products';
+const VENDUS_API_BASE = 'https://www.vendus.pt/ws/v1.0/products';
 const VENDUS_API_KEY = process.env.VENDUS_API_KEY;
 
 export interface VendusProduct {
@@ -17,7 +17,7 @@ interface VendusCategory {
 }
 
 const parsePrice = (item: any) => {
-  let rawPrice = 0;
+  let rawPrice: any = 0;
   
   if (item.gross_price) {
     rawPrice = item.gross_price;
@@ -27,30 +27,44 @@ const parsePrice = (item: any) => {
     rawPrice = item.prices[0].value || item.prices[0].gross_price || 0;
   }
 
-  const num = parseFloat(rawPrice);
+  const num = parseFloat(String(rawPrice));
   return isNaN(num) || num === 0 ? 0 : num;
 };
 
 export async function fetchVendusProducts(): Promise<VendusProduct[]> {
+  if (!VENDUS_API_KEY) {
+    console.warn('⚠️ VENDUS_API_KEY não configurada.');
+    return [];
+  }
+
   try {
-    const response = await fetch(`${VENDUS_API_BASE}?api_key=${VENDUS_API_KEY}&per_page=200&status=on`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch products from Vendus API');
-    }
+    const response = await fetch(VENDUS_API_BASE, {
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(VENDUS_API_KEY + ':').toString('base64'),
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
 
-    const textResponse = await response.text();
+    const contentType = response.headers.get('content-type');
 
-    if (textResponse.trim().startsWith('<')) {
-      console.error('❌ Erro Vendus: A API devolveu HTML em vez de JSON. Verifica a chave de API ou o endpoint.');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textBody = await response.text();
+      console.error('❌ Erro Vendus: A API devolveu HTML em vez de JSON. Resposta:', textBody.substring(0, 150));
       return [];
     }
 
-    const data = JSON.parse(textResponse);
-    console.log("ESTRUTURA DO PRODUTO VENDUS:", JSON.stringify(data[0] || data.data?.[0], null, 2));
+    if (!response.ok) {
+      console.error(`❌ Erro Vendus HTTP: ${response.status}`);
+      return [];
+    }
 
-    const rawProducts = data.products || [];
+    const products = await response.json();
+    const items = Array.isArray(products) ? products : [];
 
-    return rawProducts.map((item: any) => ({
+    console.log("ESTRUTURA DO PRODUTO VENDUS:", JSON.stringify(items[0] || items.data?.[0], null, 2));
+
+    return items.map((item: any) => ({
       id: item.id,
       name: item.title || item.name,
       price: parsePrice(item),
@@ -61,7 +75,7 @@ export async function fetchVendusProducts(): Promise<VendusProduct[]> {
       is_active: item.status === 'A' || item.is_active !== false,
     }));
   } catch (error) {
-    console.error('Error fetching Vendus products:', error);
+    console.error('❌ Erro de rede ao contactar o Vendus:', error);
     return [];
   }
 }

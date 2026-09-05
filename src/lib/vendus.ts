@@ -12,24 +12,38 @@ export async function getVendusMenu(): Promise<{ categories: string[]; items: Ve
   const apiKey = process.env.VENDUS_API_KEY;
 
   if (!apiKey) {
-    console.warn('VENDUS_API_KEY não encontrada. A usar dados de demonstração.');
+    console.warn('⚠️ VENDUS_API_KEY não configurada.');
     return getFallbackMenu();
   }
 
   try {
-    const res = await fetch(`https://www.vendus.pt/ws/v1.2/products?api_key=${apiKey}&per_page=200&status=on`, {
-      next: { revalidate: 300 },
+    const response = await fetch('https://www.vendus.pt/ws/v1.0/products', {
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(apiKey + ':').toString('base64'),
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
     });
 
-    if (!res.ok) throw new Error('Erro ao procurar dados no Vendus');
+    const contentType = response.headers.get('content-type');
 
-    const data = await res.json();
+    if (!contentType || !contentType.includes('application/json')) {
+      const textBody = await response.text();
+      console.error('❌ Erro Vendus: A API devolveu HTML em vez de JSON. Resposta:', textBody.substring(0, 150));
+      return getFallbackMenu();
+    }
 
-    console.log("ESTRUTURA DO PRODUTO VENDUS:", JSON.stringify(data[0] || data.data?.[0], null, 2));
+    if (!response.ok) {
+      console.error(`❌ Erro Vendus HTTP: ${response.status}`);
+      return getFallbackMenu();
+    }
+
+    const products = await response.json();
+    const items = Array.isArray(products) ? products : [];
 
     const parsePrice = (item: any) => {
-      let rawPrice = 0;
-      
+      let rawPrice: any = 0;
+
       if (item.gross_price) {
         rawPrice = item.gross_price;
       } else if (item.price) {
@@ -38,11 +52,11 @@ export async function getVendusMenu(): Promise<{ categories: string[]; items: Ve
         rawPrice = item.prices[0].value || item.prices[0].gross_price || 0;
       }
 
-      const num = parseFloat(rawPrice);
+      const num = parseFloat(String(rawPrice));
       return isNaN(num) || num === 0 ? '0.00 €' : `${num.toFixed(2)} €`;
     };
 
-    const items: VendusProduct[] = data.map((item: any) => ({
+    const mappedItems: VendusProduct[] = items.map((item: any) => ({
       id: item.id,
       name: item.title || item.name,
       price: parsePrice(item),
@@ -51,11 +65,11 @@ export async function getVendusMenu(): Promise<{ categories: string[]; items: Ve
       is_available: item.status === 'A' || item.is_available !== false,
     }));
 
-    const categories = Array.from(new Set(items.map((i) => i.category || 'Geral')));
+    const categories = Array.from(new Set(mappedItems.map((i) => i.category || 'Geral')));
 
-    return { categories, items };
+    return { categories, items: mappedItems };
   } catch (error) {
-    console.error('Erro na integração Vendus:', error);
+    console.error('❌ Erro de rede ao contactar o Vendus:', error);
     return getFallbackMenu();
   }
 }
