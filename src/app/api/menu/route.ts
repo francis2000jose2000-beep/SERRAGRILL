@@ -4,6 +4,11 @@ export async function GET() {
   try {
     const products = await fetchVendusProducts();
 
+    if (!products || products.length === 0) {
+      console.warn('⚠️ Vendus API indisponível ou sem produtos. A retornar menu vazio.');
+      return Response.json({ success: true, categories: {}, totalProducts: 0 });
+    }
+
     type MenuProduct = {
       id: string;
       name: string;
@@ -51,32 +56,13 @@ export async function GET() {
       });
     });
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        categories,
-        totalProducts: products.length,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    return Response.json({
+      success: true,
+      categories,
+      totalProducts: products.length,
+    });
   } catch (error) {
-    console.error('Error fetching menu:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: 'Erro ao carregar menu',
-      }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    console.error('❌ Erro crítico ao carregar menu:', error);
+    return Response.json({ success: true, categories: {}, totalProducts: 0 });
   }
 }
