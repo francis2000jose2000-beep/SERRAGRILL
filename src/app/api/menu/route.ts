@@ -4,6 +4,17 @@ export async function GET() {
   try {
     const products = await fetchVendusProducts();
 
+    type MenuProduct = {
+      id: string;
+      name: string;
+      price: string;
+      category: string;
+      description?: string;
+      image?: string;
+      image_url?: string;
+      is_active?: boolean;
+    };
+
     const parsePrice = (item: any) => {
       let rawPrice: any = 0;
       
@@ -21,7 +32,7 @@ export async function GET() {
     };
 
     // Group products by category
-    const categories: Record<string, VendusProduct[]> = {};
+    const categories: Record<string, MenuProduct[]> = {};
 
     products.forEach((product: VendusProduct) => {
       const category = product.category || 'Outros';
