@@ -37,7 +37,15 @@ export async function fetchVendusProducts(): Promise<VendusProduct[]> {
     if (!response.ok) {
       throw new Error('Failed to fetch products from Vendus API');
     }
-    const data = await response.json();
+
+    const textResponse = await response.text();
+
+    if (textResponse.trim().startsWith('<')) {
+      console.error('❌ Erro Vendus: A API devolveu HTML em vez de JSON. Verifica a chave de API ou o endpoint.');
+      return [];
+    }
+
+    const data = JSON.parse(textResponse);
     console.log("ESTRUTURA DO PRODUTO VENDUS:", JSON.stringify(data[0] || data.data?.[0], null, 2));
 
     const rawProducts = data.products || [];
