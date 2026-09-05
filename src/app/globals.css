@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: #141210;
+    --bg-subtle: #1c1916;
+    --card: #211f1b;
+    --border: #3a3530;
+    --accent: #d4a053;
+    --accent-soft: rgba(212, 160, 83, 0.12);
+    --text: #f4f1ec;
+    --muted: #8a8279;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #141210;
+    color: #f4f1ec;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #__next {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@utility no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

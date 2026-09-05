@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  MANAGER
+  STAFF
+}
+
+enum MealTurn {
+  LUNCH
+  DINNER
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  SEATED
+  COMPLETED
+  CANCELLED
+}
+
+model Restaurant {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  address          String
+  phone            String
+  email            String   @unique
+  vendusApiKey     String?
+  vendusRegisterId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tables       Table[]
+  shifts       Shift[]
+  reservations Reservation[]
+}
+
+model Table {
+  id           String  @id @default(cuid())
+  number       String
+  capacity     Int
+  isActive     Boolean @default(true)
+  restaurantId String
+
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  reservations Reservation[]
+
+  @@unique([restaurantId, number])
+}
+
+model Customer {
+  id             String        @id @default(cuid())
+  name           String
+  email          String        @unique
+  phone          String        @unique
+  nif            String?
+  vendusClientId String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  reservations   Reservation[]
+
+  @@index([phone])
+}
+
+model Shift {
+  id           String   @id @default(cuid())
+  turn         MealTurn
+  startTime    String // e.g., "12:00"
+  endTime      String // e.g., "15:00"
+  maxCovers    Int
+  daysOfWeek   Int[]
+  restaurantId String
+
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  reservations Reservation[]
+
+  @@unique([restaurantId, turn])
+}
+
+model Reservation {
+  id           String            @id @default(cuid())
+  code         String            @unique // RES-1234
+  date         DateTime          @db.Date
+  time         String
+  partySize    Int
+  status       ReservationStatus @default(PENDING)
+  notes        String?
+  vendusSynced Boolean           @default(false)
+  restaurantId String
+  customerId   String
+  tableId      String?
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  customer   Customer   @relation(fields: [customerId], references: [id])
+  table      Table?     @relation(fields: [tableId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Shift     Shift?   @relation(fields: [shiftId], references: [id])
+  shiftId   String?
+
+  @@index([restaurantId, date])
+}
