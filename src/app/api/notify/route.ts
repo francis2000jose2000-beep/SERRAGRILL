@@ -28,32 +28,36 @@ Marketing: ${marketing}`;
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
-    if (sheetId && clientEmail && privateKey) {
-      const formattedPrivateKey = privateKey.replace(/\\n/g, '\n').replace(/"/g, '');
-
-      const serviceAccountAuth = new JWT({
-        email: clientEmail,
-        key: formattedPrivateKey,
-        scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-      });
-
-      const doc = new GoogleSpreadsheet(sheetId, serviceAccountAuth);
-      await doc.loadInfo(); 
-      
-      const sheet = doc.sheetsByIndex[0];
-      
-      await sheet.addRow({
-        'Data da Reserva': date,
-        'Hora da reserva': time,
-        'Nome': name,
-        'Telemóvel': `'${phone}`,
-        'Email': email || 'N/A',
-        'Marketing': marketing
-      });
-      
-      console.log('✅ Cliente guardado com sucesso no Google Sheets!');
-    } else {
+    if (!sheetId || !clientEmail || !privateKey) {
       console.warn('⚠️ Google Sheets saltado: Credenciais não configuradas no .env.local');
+    } else {
+      try {
+        const formattedPrivateKey = privateKey.replace(/\\n/g, '\n').replace(/"/g, '');
+
+        const serviceAccountAuth = new JWT({
+          email: clientEmail,
+          key: formattedPrivateKey,
+          scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+
+        const doc = new GoogleSpreadsheet(sheetId, serviceAccountAuth);
+        await doc.loadInfo(); 
+        
+        const sheet = doc.sheetsByIndex[0];
+        
+        await sheet.addRow({
+          'Data da Reserva': date,
+          'Hora da reserva': time,
+          'Nome': name,
+          'Telemóvel': `'${phone}`,
+          'Email': email || 'N/A',
+          'Marketing': marketing
+        });
+        
+        console.log('✅ Cliente guardado com sucesso no Google Sheets!');
+      } catch (sheetError) {
+        console.error('❌ Erro ao guardar no Google Sheets:', sheetError);
+      }
     }
 
     return NextResponse.json({ success: true });
