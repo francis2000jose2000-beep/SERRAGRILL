@@ -13,7 +13,7 @@ export function HeroSection() {
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-6">
-        <p className="text-[#C5A059] uppercase tracking-[0.3em] text-sm font-semibold">
+        <p className="text-[#B33A2F] uppercase tracking-[0.3em] text-sm font-semibold">
           Gastronomia de Excelência
         </p>
 
@@ -28,13 +28,13 @@ export function HeroSection() {
         <div className="flex flex-col sm:flex-row justify-center gap-4 pt-10">
           <a
             href="#menu"
-            className="bg-[#C5A059] hover:bg-[#A88849] text-white px-8 py-3.5 text-sm uppercase tracking-widest transition-colors duration-300"
+            className="bg-[#B33A2F] hover:bg-[#8F2E25] text-white px-8 py-3.5 text-sm uppercase tracking-widest transition-colors duration-300"
           >
             Ver a Carta
           </a>
           <a
             href="#reservas"
-            className="border border-[#C5A059] text-[#C5A059] hover:bg-[#C5A059] hover:text-white px-8 py-3.5 text-sm uppercase tracking-widest transition-colors duration-300"
+            className="border border-[#B33A2F] text-[#B33A2F] hover:bg-[#B33A2F] hover:text-white px-8 py-3.5 text-sm uppercase tracking-widest transition-colors duration-300"
           >
             Reservar Mesa
           </a>

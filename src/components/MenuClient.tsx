@@ -68,7 +68,7 @@ export function MenuClient({
             placeholder="Pesquisar no menu..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent border border-[#3a3530] text-[#f4f1ec] text-sm rounded-none px-4 py-3 pl-10 focus:border-[#d4a053] outline-none transition placeholder:text-[#8a8279]"
+            className="w-full bg-transparent border border-[#3a3530] text-[#f4f1ec] text-sm rounded-none px-4 py-3 pl-10 focus:border-[#B33A2F] outline-none transition placeholder:text-[#8a8279]"
           />
           <span className="absolute left-3.5 top-3.5 text-[#8a8279] text-sm">🔍</span>
         </div>
@@ -78,8 +78,8 @@ export function MenuClient({
             onClick={() => setSelectedCategory('Todas')}
             className={`px-5 py-2 rounded-none text-xs font-medium tracking-wide uppercase whitespace-nowrap transition-all border ${
               selectedCategory === 'Todas'
-                ? 'bg-[#d4a053] text-[#141210] border-[#d4a053]'
-                : 'bg-transparent border-[#3a3530] text-[#8a8279] hover:text-[#f4f1ec] hover:border-[#d4a053]'
+                ? 'bg-[#B33A2F] text-[#141210] border-[#B33A2F]'
+                : 'bg-transparent border-[#3a3530] text-[#8a8279] hover:text-[#f4f1ec] hover:border-[#B33A2F]'
             }`}
           >
             Todas
@@ -90,8 +90,8 @@ export function MenuClient({
               onClick={() => setSelectedCategory(cat)}
               className={`px-5 py-2 rounded-none text-xs font-medium tracking-wide uppercase whitespace-nowrap transition-all border ${
                 selectedCategory === cat
-                  ? 'bg-[#d4a053] text-[#141210] border-[#d4a053]'
-                  : 'bg-transparent border-[#3a3530] text-[#8a8279] hover:text-[#f4f1ec] hover:border-[#d4a053]'
+                  ? 'bg-[#B33A2F] text-[#141210] border-[#B33A2F]'
+                  : 'bg-transparent border-[#3a3530] text-[#8a8279] hover:text-[#f4f1ec] hover:border-[#B33A2F]'
               }`}
             >
               {cat}
@@ -113,7 +113,7 @@ export function MenuClient({
                 {items.map((item: any) => (
                   <div key={item.id} className="flex justify-between items-end border-b border-[#2A2825] pb-3 group">
                     <div className="flex-1 pr-4">
-                      <h3 className="text-lg font-serif font-medium text-[#EAE6DF] group-hover:text-[#C5A059] transition-colors">
+                      <h3 className="text-lg font-serif font-medium text-[#EAE6DF] group-hover:text-[#B33A2F] transition-colors">
                         {item.title || item.name}
                       </h3>
                       {item.description && (
@@ -123,7 +123,7 @@ export function MenuClient({
                       )}
                     </div>
                     <div>
-                      <span className="text-[#C5A059] font-bold whitespace-nowrap">
+                      <span className="text-[#B33A2F] font-bold whitespace-nowrap">
                         {parsePrice(item)}
                       </span>
                     </div>

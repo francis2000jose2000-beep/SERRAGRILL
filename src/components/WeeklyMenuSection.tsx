@@ -15,7 +15,7 @@ export function WeeklyMenuSection() {
           <h2 className="text-4xl md:text-5xl font-serif font-bold text-[#141210]">
             Ementa Semanal
           </h2>
-          <p className="text-[#A88849] font-serif italic text-lg">
+          <p className="text-[#8F2E25] font-serif italic text-lg">
             As sugestões do nosso Chef para cada dia da semana.
           </p>
         </div>
@@ -24,10 +24,10 @@ export function WeeklyMenuSection() {
           {weeklyMenu.map((item, idx) => (
             <div key={idx} className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[#EAE6DF] pb-4 group">
               <div className="flex-1">
-                <span className="text-sm uppercase tracking-widest text-[#A88849] font-bold block mb-1">
+                <span className="text-sm uppercase tracking-widest text-[#8F2E25] font-bold block mb-1">
                   {item.day}
                 </span>
-                <h3 className="text-xl font-serif font-bold group-hover:text-[#A88849] transition-colors">
+                <h3 className="text-xl font-serif font-bold group-hover:text-[#8F2E25] transition-colors">
                   {item.dish}
                 </h3>
                 <p className="text-[#5A554C] text-sm mt-1">{item.desc}</p>

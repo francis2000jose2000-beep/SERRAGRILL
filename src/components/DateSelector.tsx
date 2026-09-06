@@ -60,8 +60,8 @@ export default function DateSelector({
               onClick={() => handleSelect(day.fullDate)}
               className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border transition-all duration-200 ${
                 isSelected 
-                  ? "bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-900/20" 
-                  : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-amber-600/50 hover:text-amber-500"
+                  ? "bg-[#B33A2F] border-[#D14437] text-white shadow-lg shadow-[#B33A2F]/20" 
+                  : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:border-[#B33A2F]/50 hover:text-[#D14437]"
               }`}
             >
               <span className="text-[10px] font-semibold uppercase tracking-wider mb-1">

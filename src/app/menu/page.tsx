@@ -20,10 +20,10 @@ export default async function MenuPage() {
           <p className="text-[#8a8279] text-base font-['Playfair_Display'] italic">
             Pratos confecionados com tradição e os melhores ingredientes da serra.
           </p>
-          <div className="mt-4 mx-auto w-24 h-px bg-[#d4a053]" />
+          <div className="mt-4 mx-auto w-24 h-px bg-[#B33A2F]" />
         </div>
 
-        <div className="relative w-full max-w-5xl mx-auto mb-12 rounded-2xl overflow-hidden border border-amber-900/40 shadow-2xl bg-zinc-900/50">
+        <div className="relative w-full max-w-5xl mx-auto mb-12 rounded-2xl overflow-hidden border border-[#8F2E25]/40 shadow-2xl bg-zinc-900/50">
           <img
             src="/RestaurantBanner.png"
             alt="Restaurante Serra&amp;Grill"

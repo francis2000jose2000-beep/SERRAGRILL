@@ -25,7 +25,7 @@ export function LiveDashboard({ reservations = [] }: { reservations?: Reservatio
     return (
       <section className="py-12 px-6 bg-zinc-950 border-t border-zinc-900">
         <div className="max-w-6xl mx-auto text-zinc-300">
-          <h3 className="text-xl font-bold text-amber-500 mb-4">Dashboard ao Vivo - Reservas</h3>
+          <h3 className="text-xl font-bold text-[#D14437] mb-4">Dashboard ao Vivo - Reservas</h3>
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm text-zinc-500">
             A carregar reservas...
           </div>
@@ -37,7 +37,7 @@ export function LiveDashboard({ reservations = [] }: { reservations?: Reservatio
   return (
     <section className="py-12 px-6 bg-zinc-950 border-t border-zinc-900">
       <div className="max-w-6xl mx-auto text-zinc-300">
-        <h3 className="text-xl font-bold text-amber-500 mb-4">Dashboard ao Vivo - Reservas</h3>
+        <h3 className="text-xl font-bold text-[#D14437] mb-4">Dashboard ao Vivo - Reservas</h3>
         <div className="overflow-x-auto bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-sm">
           {reservations.length > 0 ? (
             <table className="w-full text-left">
@@ -54,7 +54,7 @@ export function LiveDashboard({ reservations = [] }: { reservations?: Reservatio
               <tbody>
                 {reservations.map((r) => (
                   <tr key={r.id} className="border-b border-zinc-800/50">
-                    <td className="p-2 font-mono text-amber-400">{r.code}</td>
+                    <td className="p-2 font-mono text-[#B33A2F]">{r.code}</td>
                     <td className="p-2">{r.customer?.name || 'N/A'}</td>
                     <td className="p-2" suppressHydrationWarning>
                       {new Date(r.date).toLocaleDateString('pt-PT')}
@@ -62,7 +62,7 @@ export function LiveDashboard({ reservations = [] }: { reservations?: Reservatio
                     <td className="p-2">{r.time}</td>
                     <td className="p-2">{r.partySize}</td>
                     <td className="p-2">
-                      <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <span className="px-2 py-0.5 rounded-md text-xs font-semibold bg-[#B33A2F]/10 text-[#B33A2F] border border-[#B33A2F]/20">
                         {r.status}
                       </span>
                     </td>

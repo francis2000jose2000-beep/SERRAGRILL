@@ -17,7 +17,7 @@ export default function HomePage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-amber-500">
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center text-[#D14437]">
         A carregar Serra & Grill...
       </div>
     );

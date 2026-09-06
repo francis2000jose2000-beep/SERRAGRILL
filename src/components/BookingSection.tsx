@@ -81,7 +81,7 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
       <div className="max-w-3xl mx-auto">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-serif font-bold">Reserva de Mesa</h2>
-          <p className="text-[#C5A059] font-serif italic text-lg">
+          <p className="text-[#B33A2F] font-serif italic text-lg">
             Garanta o seu lugar e escolha os seus pratos antecipadamente.
           </p>
         </div>
@@ -99,7 +99,7 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
             </p>
             <button 
               onClick={resetForm}
-              className="mt-8 text-amber-500 hover:text-amber-400 font-medium"
+              className="mt-8 text-[#D14437] hover:text-[#D14437] font-medium"
             >
               Fazer nova reserva
             </button>
@@ -114,14 +114,14 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Nome</label>
-                <input required type="text" name="name" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="O seu nome" />
+                <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Nome</label>
+                <input required type="text" name="name" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#B33A2F] transition-colors" placeholder="O seu nome" />
               </div>
               
               <div className="space-y-2">
-                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Telemóvel</label>
+                <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Telemóvel</label>
                 <div className="flex gap-2">
-                  <select name="prefix" className="bg-[#141210] border border-[#333] text-white px-3 py-3 focus:outline-none focus:border-[#C5A059] transition-colors">
+                  <select name="prefix" className="bg-[#141210] border border-[#333] text-white px-3 py-3 focus:outline-none focus:border-[#B33A2F] transition-colors">
                     <option value="+351">🇵🇹 +351</option>
                     <option value="+34">🇪🇸 +34</option>
                     <option value="+33">🇫🇷 +33</option>
@@ -130,17 +130,17 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
                     <option value="+55">🇧🇷 +55</option>
                     <option value="+1">🇺🇸/🇨🇦 +1</option>
                   </select>
-                  <input required type="tel" name="phone" className="flex-1 bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="912 345 678" />
+                  <input required type="tel" name="phone" className="flex-1 bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#B33A2F] transition-colors" placeholder="912 345 678" />
                 </div>
               </div>
               
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Email (Opcional)</label>
-                <input type="email" name="email" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="o.seu@email.com" />
+                <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Email (Opcional)</label>
+                <input type="email" name="email" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#B33A2F] transition-colors" placeholder="o.seu@email.com" />
               </div>
               
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Data</label>
+                <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Data</label>
                 <DateSelector 
                   onDateSelect={(date) => setSelectedDate(date)} 
                 />
@@ -150,7 +150,7 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
                 )}
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Hora</label>
+                <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Hora</label>
                 <TimeSelector 
                   onTimeSelect={(time) => setSelectedTime(time)} 
                 />
@@ -162,28 +162,28 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Nº de Pessoas</label>
-              <input required type="number" name="guests" min="1" max="20" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="Ex: 4" />
+              <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Nº de Pessoas</label>
+              <input required type="number" name="guests" min="1" max="20" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#B33A2F] transition-colors" placeholder="Ex: 4" />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Comentários / Observações</label>
-              <input type="text" name="comments" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="Ex: Cadeira de bebé, alergias..." />
+              <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Comentários / Observações</label>
+              <input type="text" name="comments" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#B33A2F] transition-colors" placeholder="Ex: Cadeira de bebé, alergias..." />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Ementa / Pré-reserva de Pratos</label>
-              <textarea name="dishes" rows={3} className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors resize-none" placeholder="Ex: 2x Bacalhau com Broa, 1x Posta Mirandesa"></textarea>
+              <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Ementa / Pré-reserva de Pratos</label>
+              <textarea name="dishes" rows={3} className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#B33A2F] transition-colors resize-none" placeholder="Ex: 2x Bacalhau com Broa, 1x Posta Mirandesa"></textarea>
             </div>
 
             <div className="flex items-start gap-3 py-2">
-              <input type="checkbox" name="marketing" id="marketing" className="mt-1 w-4 h-4 accent-[#C5A059] bg-[#141210] border-[#333] cursor-pointer" />
-              <label htmlFor="marketing" className="text-sm text-[#A88849] cursor-pointer select-none">
+              <input type="checkbox" name="marketing" id="marketing" className="mt-1 w-4 h-4 accent-[#B33A2F] bg-[#141210] border-[#333] cursor-pointer" />
+              <label htmlFor="marketing" className="text-sm text-[#8F2E25] cursor-pointer select-none">
                 Aceito receber promoções, novidades e ofertas exclusivas por e-mail e mensagem.
               </label>
             </div>
 
-            <button type="submit" disabled={isSubmitting} className="w-full bg-[#C5A059] hover:bg-[#A88849] text-white font-bold tracking-widest uppercase py-4 transition-colors disabled:opacity-50">
+            <button type="submit" disabled={isSubmitting} className="w-full bg-[#B33A2F] hover:bg-[#8F2E25] text-white font-bold tracking-widest uppercase py-4 transition-colors disabled:opacity-50">
               {isSubmitting ? 'A enviar reserva...' : 'Confirmar Reserva'}
             </button>
           </form>

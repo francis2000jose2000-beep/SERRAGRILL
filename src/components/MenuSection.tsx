@@ -64,7 +64,7 @@ export const MenuSection: React.FC = () => {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-serif font-bold">Ementa</h2>
-          <p className="text-[#C5A059] font-serif italic text-lg">
+          <p className="text-[#B33A2F] font-serif italic text-lg">
             Descubra os nossos pratos, atualizados ao longo da semana.
           </p>
         </div>
@@ -80,8 +80,8 @@ export const MenuSection: React.FC = () => {
                 className={[
                   'bg-[#1A1816] border rounded-2xl p-5 transition-all duration-200 flex flex-col justify-between group',
                   isToday
-                    ? 'border-[#C5A059] shadow-[0_0_0_1px_rgba(197,160,89,0.25)]'
-                    : 'border-[#2A2825] hover:border-[#C5A059]/40',
+                    ? 'border-[#B33A2F] shadow-[0_0_0_1px_rgba(179,58,47,0.25)]'
+                    : 'border-[#2A2825] hover:border-[#B33A2F]/40',
                   isPast ? 'opacity-40' : 'opacity-100',
                 ].join(' ')}
               >
@@ -89,14 +89,14 @@ export const MenuSection: React.FC = () => {
                   <h3
                     className={[
                       'font-bold text-base transition-colors',
-                      isToday ? 'text-[#C5A059]' : 'text-[#F8F5F0] group-hover:text-amber-400',
+                      isToday ? 'text-[#B33A2F]' : 'text-[#F8F5F0] group-hover:text-[#D14437]',
                       isPast ? 'line-through text-neutral-400' : '',
                     ].join(' ')}
                   >
                     {day.label}
                   </h3>
                   {isToday && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-[#C5A059]/15 text-[#C5A059] border border-[#C5A059]/25 px-2 py-1 rounded-lg">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-[#B33A2F]/15 text-[#B33A2F] border border-[#B33A2F]/25 px-2 py-1 rounded-lg">
                       Destaque do Dia
                     </span>
                   )}
@@ -104,13 +104,13 @@ export const MenuSection: React.FC = () => {
                 <ul className="space-y-2 flex-1">
                   {(menuByDay[day.jsDay]?.categories || []).map((cat) => (
                     <li key={cat.name} className="text-sm">
-                      <span className="text-[#A88849] font-semibold">{cat.name}</span>
+                      <span className="text-[#8F2E25] font-semibold">{cat.name}</span>
                       <ul className="mt-1 space-y-1">
                         {cat.items.map((item) => (
                           <li key={item} className="text-[#F8F5F0] text-sm flex items-center justify-between gap-3">
                             <span className={isPast ? 'line-through text-neutral-400' : ''}>{item}</span>
                             <span className="shrink-0">
-                              <span className="bg-amber-500/10 text-amber-400 font-bold px-3 py-1 rounded-lg border border-amber-500/20 text-xs">
+                              <span className="bg-[#B33A2F]/10 text-[#D14437] font-bold px-3 py-1 rounded-lg border border-[#B33A2F]/20 text-xs">
                                 €8,00
                               </span>
                             </span>
