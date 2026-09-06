@@ -1,68 +1,41 @@
-import { fetchVendusProducts, type VendusProduct } from '../../../lib/services/vendusService';
+import { NextResponse } from 'next/server';
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { JWT } from 'google-auth-library';
+
+export const revalidate = 0; // Desativa cache estática
 
 export async function GET() {
   try {
-    const products = await fetchVendusProducts();
+    const sheetId = process.env.GOOGLE_SHEET_ID;
+    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
-    if (!products || products.length === 0) {
-      console.warn('⚠️ Vendus API indisponível ou sem produtos. A retornar menu vazio.');
-      return Response.json({ success: true, categories: {}, totalProducts: 0 });
+    if (!sheetId || !clientEmail || !privateKey) {
+      return NextResponse.json({ success: false, error: 'Credenciais em falta' }, { status: 500 });
     }
 
-    type MenuProduct = {
-      id: string;
-      name: string;
-      price: string;
-      category: string;
-      description?: string;
-      image?: string;
-      image_url?: string;
-      is_active?: boolean;
-    };
-
-    const parsePrice = (item: any) => {
-      let rawPrice: any = 0;
-      
-      if (item.gross_price) {
-        rawPrice = item.gross_price;
-      } else if (item.price) {
-        rawPrice = item.price;
-      } else if (item.prices && Array.isArray(item.prices) && item.prices.length > 0) {
-        rawPrice = item.prices[0].value || item.prices[0].gross_price || 0;
-      }
-
-      // Envolvemos em String() para garantir que o TypeScript aceita o argumento
-      const num = parseFloat(String(rawPrice));
-      return isNaN(num) || num === 0 ? '0.00 €' : `${num.toFixed(2)} €`;
-    };
-
-    // Group products by category
-    const categories: Record<string, MenuProduct[]> = {};
-
-    products.forEach((product: VendusProduct) => {
-      const category = product.category || 'Outros';
-      if (!categories[category]) {
-        categories[category] = [];
-      }
-      categories[category].push({
-        id: product.id,
-        name: product.name,
-        price: parsePrice(product),
-        category: product.category,
-        description: product.description,
-        image: product.image_url,
-        image_url: product.image_url,
-        is_active: product.is_active,
-      });
+    const auth = new JWT({
+      email: clientEmail,
+      key: privateKey.replace(/\\n/g, '\n').replace(/"/g, ''),
+      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
 
-    return Response.json({
-      success: true,
-      categories,
-      totalProducts: products.length,
-    });
+    const doc = new GoogleSpreadsheet(sheetId, auth);
+    await doc.loadInfo();
+    
+    const sheet = doc.sheetsByTitle['Ementa'];
+    if (!sheet) return NextResponse.json({ success: false, error: 'Aba Ementa não encontrada' }, { status: 404 });
+
+    const rows = await sheet.getRows();
+    const menu = rows.map(row => ({
+      dia: row.get('Dia') || '',
+      prato: row.get('Prato') || '',
+      preco: row.get('Preco') || ''
+    }));
+
+    return NextResponse.json({ success: true, menu });
   } catch (error) {
-    console.error('❌ Erro crítico ao carregar menu:', error);
-    return Response.json({ success: true, categories: {}, totalProducts: 0 });
+    console.error('Erro ao buscar menu:', error);
+    return NextResponse.json({ success: false, error: 'Erro interno' }, { status: 500 });
   }
 }

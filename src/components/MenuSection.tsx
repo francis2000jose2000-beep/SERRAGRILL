@@ -1,67 +1,41 @@
 'use client';
+import { useEffect, useState } from 'react';
 
-import { useMemo } from 'react';
+interface MenuItem {
+  dia: string;
+  prato: string;
+  preco: string;
+}
 
-const WEEKDAYS = [
-  { id: 1, label: 'Segunda', jsDay: 1 },
-  { id: 2, label: 'Terça', jsDay: 2 },
-  { id: 3, label: 'Quarta', jsDay: 3 },
-  { id: 4, label: 'Quinta', jsDay: 4 },
-  { id: 5, label: 'Sexta', jsDay: 5 },
-  { id: 6, label: 'Sábado', jsDay: 6 },
-];
-
-const menuByDay: Record<number, { categories: { name: string; items: string[] }[] }> = {
-  1: {
-    categories: [
-      { name: 'Entradas', items: ['Caldo Verde', 'Pão Regional'] },
-      { name: 'Pratos Principais', items: ['Arroz de Pato', 'Bacalhau com Natas'] },
-      { name: 'Sobremesas', items: ['Arroz Doce', 'Leite Creme'] },
-    ],
-  },
-  2: {
-    categories: [
-      { name: 'Entradas', items: ['Presunto Ibérico', 'Azeitonas Temperadas'] },
-      { name: 'Pratos Principais', items: ['Posta Mirandesa', 'Feijoada de Bitoque'] },
-      { name: 'Sobremesas', items: ['Pudim de Ovos', 'Toucinho do Céu'] },
-    ],
-  },
-  3: {
-    categories: [
-      { name: 'Entradas', items: ['Sopa de Pedra', 'Queijo Curado'] },
-      { name: 'Pratos Principais', items: ['Bacalhau à Brás', 'Linguado Grelhado'] },
-      { name: 'Sobremesas', items: ['Mousse de Chocolate', 'Pastel de Nata'] },
-    ],
-  },
-  4: {
-    categories: [
-      { name: 'Entradas', items: ['Salada de Polvo', 'Croquetes de Presunto'] },
-      { name: 'Pratos Principais', items: ['Cozido à Portuguesa', 'Carne de Porco à Alentejana'] },
-      { name: 'Sobremesas', items: ['Bolo de Bolacha', 'Folar'] },
-    ],
-  },
-  5: {
-    categories: [
-      { name: 'Entradas', items: ['Tábuas Mistas', 'Chouriço Assado'] },
-      { name: 'Pratos Principais', items: ['Salmão Grelhado', 'Picanha na Brasa'] },
-      { name: 'Sobremesas', items: ['Cheesecake de Frutos Vermelhos', 'Petit Gâteau'] },
-    ],
-  },
-  6: {
-    categories: [
-      { name: 'Entradas', items: ['Mariscada', 'Empadão de Bacalhau'] },
-      { name: 'Pratos Principais', items: ['Lagosta Grelhada', 'Cabrito no Forno'] },
-      { name: 'Sobremesas', items: ['Doce de Santa Teresa', 'Bolo de Amêndoa'] },
-    ],
-  },
+const getDayNumber = (diaStr: string) => {
+  const d = diaStr.toLowerCase();
+  if (d.includes('segunda')) return 1;
+  if (d.includes('terça') || d.includes('terca')) return 2;
+  if (d.includes('quarta')) return 3;
+  if (d.includes('quinta')) return 4;
+  if (d.includes('sexta')) return 5;
+  if (d.includes('sábado') || d.includes('sabado')) return 6;
+  return 7;
 };
 
-export const MenuSection: React.FC = () => {
-  const today = useMemo(() => new Date().getDay(), []);
+export function MenuSection() {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const currentDay = new Date().getDay();
+
+  useEffect(() => {
+    fetch('/api/menu')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setMenuItems(data.menu);
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
+  }, []);
 
   return (
     <section id="menu" className="py-24 px-6 bg-[#141210] text-[#F8F5F0]">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-3xl mx-auto">
         <div className="text-center mb-16 space-y-4">
           <h2 className="text-4xl md:text-5xl font-serif font-bold">Ementa</h2>
           <p className="text-[#B33A2F] font-serif italic text-lg">
@@ -69,62 +43,45 @@ export const MenuSection: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {WEEKDAYS.map((day) => {
-            const isToday = today === day.jsDay;
-            const isPast = today > day.jsDay;
+        {isLoading ? (
+          <div className="text-center text-neutral-500 animate-pulse">A carregar ementa fresca...</div>
+        ) : (
+          <div className="space-y-4">
+            {menuItems.map((item, index) => {
+              const dayNum = getDayNumber(item.dia);
+              const isPastDay = currentDay !== 0 && currentDay > dayNum;
+              const isToday = currentDay === dayNum;
 
-            return (
-              <div
-                key={day.id}
-                className={[
-                  'bg-[#1A1816] border rounded-2xl p-5 transition-all duration-200 flex flex-col justify-between group',
-                  isToday
-                    ? 'border-[#B33A2F] shadow-[0_0_0_1px_rgba(179,58,47,0.25)]'
-                    : 'border-[#2A2825] hover:border-[#B33A2F]/40',
-                  isPast ? 'opacity-40' : 'opacity-100',
-                ].join(' ')}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3
-                    className={[
-                      'font-bold text-base transition-colors',
-                      isToday ? 'text-[#B33A2F]' : 'text-[#F8F5F0] group-hover:text-[#D14437]',
-                      isPast ? 'line-through text-neutral-400' : '',
-                    ].join(' ')}
-                  >
-                    {day.label}
-                  </h3>
+              return (
+                <div
+                  key={index}
+                  className={`p-5 border transition-all flex justify-between items-center ${
+                    isToday ? "border-[#B33A2F] bg-[#1A1816] shadow-lg shadow-[#B33A2F]/10" : "border-[#2A2825] bg-[#141210]"
+                  }`}
+                >
+                  <div>
+                    <span className={`text-xs font-semibold tracking-widest uppercase block mb-1 ${
+                      isToday ? "text-[#B33A2F]" : "text-neutral-500"
+                    }`}>
+                      {item.dia} {isToday && "— (Hoje)"}
+                    </span>
+                    <p className={`text-lg font-medium transition-all ${
+                      isPastDay ? "line-through opacity-40 text-neutral-400" : "text-white"
+                    }`}>
+                      {item.prato} <span className="text-sm text-[#D14437] ml-2">{item.preco}</span>
+                    </p>
+                  </div>
                   {isToday && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-[#B33A2F]/15 text-[#B33A2F] border border-[#B33A2F]/25 px-2 py-1 rounded-lg">
+                    <span className="bg-[#B33A2F] text-white text-xs px-3 py-1 uppercase tracking-wider font-bold rounded">
                       Destaque do Dia
                     </span>
                   )}
                 </div>
-                <ul className="space-y-2 flex-1">
-                  {(menuByDay[day.jsDay]?.categories || []).map((cat) => (
-                    <li key={cat.name} className="text-sm">
-                      <span className="text-[#8F2E25] font-semibold">{cat.name}</span>
-                      <ul className="mt-1 space-y-1">
-                        {cat.items.map((item) => (
-                          <li key={item} className="text-[#F8F5F0] text-sm flex items-center justify-between gap-3">
-                            <span className={isPast ? 'line-through text-neutral-400' : ''}>{item}</span>
-                            <span className="shrink-0">
-                              <span className="bg-[#B33A2F]/10 text-[#D14437] font-bold px-3 py-1 rounded-lg border border-[#B33A2F]/20 text-xs">
-                                €8,00
-                              </span>
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
-};
+}
