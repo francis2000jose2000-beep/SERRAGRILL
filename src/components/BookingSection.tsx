@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
+import DateSelector from "@/components/DateSelector";
 
 export function BookingSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>('');
 
   const timeSlots = [
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -18,6 +20,12 @@ export function BookingSection() {
     e.preventDefault();
     setIsSubmitting(true);
     setStatusMessage(null);
+
+    if (!selectedDate) {
+      setStatusMessage({ type: 'error', text: 'Por favor, selecione uma data para a reserva.' });
+      setIsSubmitting(false);
+      return;
+    }
 
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -112,25 +120,15 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
               <input type="email" name="email" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="o.seu@email.com" />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Data</label>
-              <input 
-                required 
-                type="date" 
-                name="date" 
-                min={new Date().toISOString().split('T')[0]}
-                onChange={(e) => {
-                  const selectedDate = new Date(e.target.value);
-                  if (selectedDate.getDay() === 0) {
-                    e.target.setCustomValidity('O restaurante encontra-se encerrado aos domingos. Por favor, selecione outro dia.');
-                    e.target.reportValidity();
-                    e.target.value = '';
-                  } else {
-                    e.target.setCustomValidity('');
-                  }
-                }}
-                className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" 
+              <DateSelector 
+                onDateSelect={(date) => setSelectedDate(date)} 
               />
+              <input type="hidden" name="date" value={selectedDate} />
+              {!selectedDate && (
+                <p className="text-red-400 text-xs mt-1">Por favor, selecione uma data para a reserva.</p>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Hora</label>
