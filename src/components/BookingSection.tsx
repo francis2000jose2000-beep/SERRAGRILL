@@ -6,44 +6,40 @@ import TimeSelector from "@/components/TimeSelector";
 
 export function BookingSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [error, setError] = useState('');
+  const [isSuccess, setIsSuccess] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setStatusMessage(null);
-
-    if (!selectedDate) {
-      setStatusMessage({ type: 'error', text: 'Por favor, selecione uma data para a reserva.' });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!selectedTime) {
-      setStatusMessage({ type: 'error', text: 'Por favor, selecione uma hora para a reserva.' });
-      setIsSubmitting(false);
-      return;
-    }
+    setError('');
 
     const form = e.currentTarget;
     const formData = new FormData(form);
     
     const name = formData.get('name');
-    const prefix = formData.get('prefix');
     const phone = formData.get('phone');
-    const email = formData.get('email');
+    const guests = formData.get('guests');
     const date = formData.get('date');
     const time = formData.get('time');
-    const guests = formData.get('guests');
-    const dishes = formData.get('dishes');
-    const comments = formData.get('comments');
-    const marketing = formData.get('marketing') === 'on' ? 'Sim' : 'Não';
 
-    const fullPhone = `${prefix} ${phone}`;
+    if (!name || !phone || !guests || !date || !time) {
+      setError('Por favor, preencha todos os campos obrigatórios (nome, telemóvel, pessoas, dia e hora).');
+      return;
+    }
 
-    const message = `${name}
+    setIsSubmitting(true);
+
+    try {
+      const prefix = formData.get('prefix');
+      const email = formData.get('email');
+      const dishes = formData.get('dishes');
+      const comments = formData.get('comments');
+      const marketing = formData.get('marketing') === 'on' ? 'Sim' : 'Não';
+      const fullPhone = `${prefix} ${phone}`;
+
+      const message = `${name}
 Data da reserva: ${date}
 Horas: ${time}
 Nº de pessoas: ${guests}
@@ -51,29 +47,33 @@ Contacto: ${fullPhone}
 Comentário: ${comments || 'Nenhum'}
 Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
 
-    try {
-      const res = await fetch('/api/notify', {
+      const response = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message, email, marketing, name, phone: fullPhone, date, time, guests }),
       });
 
-      const data = await res.json();
+      if (!response.ok) throw new Error('Falha no envio');
 
-      if (res.ok && data.success) {
-        setStatusMessage({ type: 'success', text: 'Reserva confirmada! O restaurante foi notificado.' });
-        form.reset();
-      } else {
+      const data = await response.json();
+
+      if (!data.success) {
         throw new Error(data.error || 'Falha ao enviar notificação');
       }
-    } catch (error) {
-      console.error(error);
-      setStatusMessage({ type: 'error', text: 'Erro ao enviar a reserva. Por favor, tente novamente.' });
+      
+      setIsSuccess(true);
+    } catch (err) {
+      setError('Ocorreu um erro ao enviar a reserva. Por favor, tente de novo.');
     } finally {
       setIsSubmitting(false);
-      
-      setTimeout(() => setStatusMessage(null), 5000);
     }
+  };
+
+  const resetForm = () => {
+    setIsSuccess(false);
+    setError('');
+    setSelectedDate('');
+    setSelectedTime('');
   };
 
   return (
@@ -86,12 +86,31 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-[#1A1816] p-8 md:p-10 border border-[#2A2825]">
-          {statusMessage && (
-            <div className={`p-4 text-center text-sm border ${statusMessage.type === 'success' ? 'bg-emerald-950/50 border-emerald-500 text-emerald-200' : 'bg-red-950/50 border-red-500 text-red-200'}`}>
-              {statusMessage.text}
+        {isSuccess ? (
+          <div className="flex flex-col items-center justify-center py-12 px-4 text-center animate-in fade-in zoom-in duration-500">
+            <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mb-6">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-          )}
+            <h2 className="text-2xl font-bold text-white mb-2">Reserva Enviada!</h2>
+            <p className="text-neutral-400 max-w-sm">
+              Recebemos o seu pedido com sucesso. Irá receber uma confirmação no seu telemóvel em breve.
+            </p>
+            <button 
+              onClick={resetForm}
+              className="mt-8 text-amber-500 hover:text-amber-400 font-medium"
+            >
+              Fazer nova reserva
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6 bg-[#1A1816] p-8 md:p-10 border border-[#2A2825]">
+            {error && (
+              <div className="text-red-500 text-sm mb-4 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                ⚠️ {error}
+              </div>
+            )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -164,10 +183,18 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
             </label>
           </div>
 
-          <button type="submit" disabled={isSubmitting} className="w-full bg-[#C5A059] hover:bg-[#A88849] text-white font-bold tracking-widest uppercase py-4 transition-colors disabled:opacity-50">
-            {isSubmitting ? 'A enviar reserva...' : 'Confirmar Reserva'}
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            onClick={handleSubmit}
+            className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
+              isSubmitting ? 'bg-amber-800 cursor-not-allowed opacity-70' : 'bg-amber-600 hover:bg-amber-500'
+            }`}
+          >
+            {isSubmitting ? 'A processar reserva...' : 'Confirmar Reserva'}
           </button>
         </form>
+        )}
       </div>
     </section>
   );
