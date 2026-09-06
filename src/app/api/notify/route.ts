@@ -4,10 +4,10 @@ import { JWT } from 'google-auth-library';
 
 export async function POST(request: Request) {
   try {
-    const { message, email, marketing, name, phone, date, time } = await request.json();
+    const { message, email, marketing, name, phone, date, time, guests } = await request.json();
 
-    const ownerPhone = process.env.RESTAURANT_WHATSAPP_PHONE;
-    const apiKey = process.env.CALLMEBOT_API_KEY;
+    const ownerPhone = process.env.RESTAURANT_WHATSAPP_PHONE || process.env.WHATSAPP_PHONE;
+    const apiKey = process.env.CALLMEBOT_API_KEY || process.env.WHATSAPP_APIKEY;
 
     if (!ownerPhone || !apiKey) {
       console.error('ERRO: Faltam as chaves do WhatsApp no .env.local');
@@ -43,18 +43,22 @@ Marketing: ${marketing}`;
         const doc = new GoogleSpreadsheet(sheetId, serviceAccountAuth);
         await doc.loadInfo(); 
         
-        const sheet = doc.sheetsByIndex[0];
+        // Seleciona a folha 'Reservas' (ou a primeira por defeito)
+        const sheet = doc.sheetsByTitle['Reservas'] || doc.sheetsByIndex[0];
         
-        await sheet.addRow({
-          'Data da Reserva': date,
-          'Hora da reserva': time,
-          'Nome': name,
-          'Telemóvel': `'${phone}`,
-          'Email': email || 'N/A',
-          'Marketing': marketing
-        });
+        // Ordem exata correspondente às colunas:
+        // A: Data | B: Hora | C: Pessoas | D: Nome | E: Telemóvel | F: Email | G: Marketing
+        await sheet.addRow([
+          date || '',
+          time || '',
+          String(guests || '1'), // Garante que o número de pessoas é gravado
+          name || '',
+          phone || '',
+          email || 'N/D',
+          marketing || 'Não'
+        ]);
         
-        console.log('✅ Cliente guardado com sucesso no Google Sheets!');
+        console.log('✅ Reserva guardada com sucesso no Google Sheets!');
       } catch (sheetError) {
         console.error('❌ Erro ao guardar no Google Sheets:', sheetError);
       }
