@@ -112,87 +112,81 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
               </div>
             )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Nome</label>
-              <input required type="text" name="name" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="O seu nome" />
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Telemóvel</label>
-              <div className="flex gap-2">
-                <select name="prefix" className="bg-[#141210] border border-[#333] text-white px-3 py-3 focus:outline-none focus:border-[#C5A059] transition-colors">
-                  <option value="+351">🇵🇹 +351</option>
-                  <option value="+34">🇪🇸 +34</option>
-                  <option value="+33">🇫🇷 +33</option>
-                  <option value="+44">🇬🇧 +44</option>
-                  <option value="+49">🇩🇪 +49</option>
-                  <option value="+55">🇧🇷 +55</option>
-                  <option value="+1">🇺🇸/🇨🇦 +1</option>
-                </select>
-                <input required type="tel" name="phone" className="flex-1 bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="912 345 678" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Nome</label>
+                <input required type="text" name="name" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="O seu nome" />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Telemóvel</label>
+                <div className="flex gap-2">
+                  <select name="prefix" className="bg-[#141210] border border-[#333] text-white px-3 py-3 focus:outline-none focus:border-[#C5A059] transition-colors">
+                    <option value="+351">🇵🇹 +351</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+55">🇧🇷 +55</option>
+                    <option value="+1">🇺🇸/🇨🇦 +1</option>
+                  </select>
+                  <input required type="tel" name="phone" className="flex-1 bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="912 345 678" />
+                </div>
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Email (Opcional)</label>
+                <input type="email" name="email" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="o.seu@email.com" />
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Data</label>
+                <DateSelector 
+                  onDateSelect={(date) => setSelectedDate(date)} 
+                />
+                <input type="hidden" name="date" value={selectedDate} />
+                {!selectedDate && (
+                  <p className="text-red-400 text-xs mt-1">Por favor, selecione uma data para a reserva.</p>
+                )}
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Hora</label>
+                <TimeSelector 
+                  onTimeSelect={(time) => setSelectedTime(time)} 
+                />
+                <input type="hidden" name="time" value={selectedTime} />
+                {!selectedTime && (
+                  <p className="text-red-400 text-xs mt-1">Por favor, selecione uma hora para a reserva.</p>
+                )}
               </div>
             </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Email (Opcional)</label>
-              <input type="email" name="email" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="o.seu@email.com" />
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Nº de Pessoas</label>
+              <input required type="number" name="guests" min="1" max="20" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="Ex: 4" />
             </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Data</label>
-              <DateSelector 
-                onDateSelect={(date) => setSelectedDate(date)} 
-              />
-              <input type="hidden" name="date" value={selectedDate} />
-              {!selectedDate && (
-                <p className="text-red-400 text-xs mt-1">Por favor, selecione uma data para a reserva.</p>
-              )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Comentários / Observações</label>
+              <input type="text" name="comments" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="Ex: Cadeira de bebé, alergias..." />
             </div>
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Hora</label>
-              <TimeSelector 
-                onTimeSelect={(time) => setSelectedTime(time)} 
-              />
-              <input type="hidden" name="time" value={selectedTime} />
-              {!selectedTime && (
-                <p className="text-red-400 text-xs mt-1">Por favor, selecione uma hora para a reserva.</p>
-              )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Ementa / Pré-reserva de Pratos</label>
+              <textarea name="dishes" rows={3} className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors resize-none" placeholder="Ex: 2x Bacalhau com Broa, 1x Posta Mirandesa"></textarea>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Nº de Pessoas</label>
-            <input required type="number" name="guests" min="1" max="20" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="Ex: 4" />
-          </div>
+            <div className="flex items-start gap-3 py-2">
+              <input type="checkbox" name="marketing" id="marketing" className="mt-1 w-4 h-4 accent-[#C5A059] bg-[#141210] border-[#333] cursor-pointer" />
+              <label htmlFor="marketing" className="text-sm text-[#A88849] cursor-pointer select-none">
+                Aceito receber promoções, novidades e ofertas exclusivas por e-mail e mensagem.
+              </label>
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Comentários / Observações</label>
-            <input type="text" name="comments" className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors" placeholder="Ex: Cadeira de bebé, alergias..." />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Ementa / Pré-reserva de Pratos</label>
-            <textarea name="dishes" rows={3} className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors resize-none" placeholder="Ex: 2x Bacalhau com Broa, 1x Posta Mirandesa"></textarea>
-          </div>
-
-          <div className="flex items-start gap-3 py-2">
-            <input type="checkbox" name="marketing" id="marketing" className="mt-1 w-4 h-4 accent-[#C5A059] bg-[#141210] border-[#333] cursor-pointer" />
-            <label htmlFor="marketing" className="text-sm text-[#A88849] cursor-pointer select-none">
-              Aceito receber promoções, novidades e ofertas exclusivas por e-mail e mensagem.
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
-              isSubmitting ? 'bg-amber-800 cursor-not-allowed opacity-70' : 'bg-amber-600 hover:bg-amber-500'
-            }`}
-          >
-            {isSubmitting ? 'A processar reserva...' : 'Confirmar Reserva'}
-          </button>
-        </form>
+            <button type="submit" disabled={isSubmitting} className="w-full bg-[#C5A059] hover:bg-[#A88849] text-white font-bold tracking-widest uppercase py-4 transition-colors disabled:opacity-50">
+              {isSubmitting ? 'A enviar reserva...' : 'Confirmar Reserva'}
+            </button>
+          </form>
         )}
       </div>
     </section>

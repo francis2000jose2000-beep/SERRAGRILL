@@ -1,8 +1,21 @@
+import { Metadata } from 'next';
 import './globals.css';
 
-export const metadata = {
-  title: 'SerraGrill',
-  description: 'Gastronomia na Serra',
+export const metadata: Metadata = {
+  title: "Serra & Grill | O Melhor Grelhado da Covilhã",
+  description: "Faça já a sua reserva no Serra & Grill. Saboreie as melhores carnes e pratos tradicionais com a qualidade de sempre. Reserve online em segundos.",
+  openGraph: {
+    title: "Serra & Grill | Restaurante & Takeaway",
+    description: "Reserve a sua mesa online de forma rápida e simples. O melhor sabor ao seu dispor.",
+    url: "https://serragrill.vercel.app",
+    siteName: "Serra & Grill",
+    locale: "pt_PT",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  }
 };
 
 export default function RootLayout({
