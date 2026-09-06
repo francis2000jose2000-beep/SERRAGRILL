@@ -8,36 +8,26 @@ interface MenuItem {
   comentario: string;
 }
 
-const getDayNumber = (diaStr: string) => {
-  const d = diaStr.toLowerCase();
-  if (d.includes('segunda')) return 1;
-  if (d.includes('terça') || d.includes('terca')) return 2;
-  if (d.includes('quarta')) return 3;
-  if (d.includes('quinta')) return 4;
-  if (d.includes('sexta')) return 5;
-  if (d.includes('sábado') || d.includes('sabado')) return 6;
-  return 7;
-};
-
 export function MenuSection() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
-  const currentDay = new Date().getDay();
 
   useEffect(() => {
+    console.log('🔄 MenuSection montou! A disparar fetch para /api/menu...');
     fetch('/api/menu', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
+        console.log('📥 Resposta recebida da API /api/menu:', data);
         if (data.success && data.menu) {
           setMenuItems(data.menu);
         } else {
-          setApiError(data.error || 'Erro ao carregar ementa.');
+          setApiError(data.error || 'Erro desconhecido ao carregar ementa.');
         }
         setIsLoading(false);
       })
       .catch(err => {
-        console.error(err);
+        console.error('❌ Erro crítico no fetch do menu:', err);
         setApiError('Falha de ligação à API do servidor.');
         setIsLoading(false);
       });
@@ -46,8 +36,6 @@ export function MenuSection() {
   return (
     <section className="py-20 px-6 bg-[#141210] text-[#F8F5F0]">
       <div className="max-w-3xl mx-auto">
-        
-        {/* Cabeçalho */}
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-[#F8F5F0] tracking-wide mb-3">
             Ementa Semanal
@@ -60,7 +48,7 @@ export function MenuSection() {
 
         {isLoading ? (
           <div className="text-center text-brand-400 font-serif py-12 animate-pulse tracking-wider">
-            A carregar ementa do Google Sheets...
+            ⚡ A carregar ementa do Google Sheets...
           </div>
         ) : apiError ? (
           <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-300 rounded text-center text-sm">
@@ -68,50 +56,28 @@ export function MenuSection() {
           </div>
         ) : menuItems.length === 0 ? (
           <div className="text-center text-neutral-400 py-12 font-serif italic">
-            Ainda não existem pratos registados na folha do Google Sheets.
+            ⚠️ O componente carregou, mas a API devolveu 0 pratos. (Verifica a consola F12).
           </div>
         ) : (
           <div className="divide-y divide-[#2A2825]">
-            {menuItems.map((item, index) => {
-              const dayNum = getDayNumber(item.dia);
-              const isPastDay = currentDay !== 0 && currentDay > dayNum;
-              const isToday = currentDay === dayNum;
-
-              return (
-                <div 
-                  key={index} 
-                  className={`py-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${
-                    isPastDay ? "opacity-40" : ""
-                  } ${isToday ? "bg-[#1A1816] -mx-4 px-4 rounded border-l-2 border-brand-500" : ""}`}
-                >
-                  {/* Dia, Prato e Comentário */}
-                  <div className="space-y-1.5 flex-1">
-                    <span className={`text-[11px] font-bold tracking-[0.2em] uppercase block ${
-                      isToday ? "text-brand-500" : "text-neutral-400"
-                    }`}>
-                      {item.dia} {isToday && "— (Hoje)"}
-                    </span>
-                    
-                    <h3 className={`text-xl font-serif font-medium ${isPastDay ? "line-through text-neutral-500" : "text-white"}`}>
-                      {item.prato}
-                    </h3>
-
-                    {item.comentario && (
-                      <p className="text-sm text-neutral-400 font-sans leading-relaxed">
-                        {item.comentario}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Preço */}
-                  <div className="text-left sm:text-right shrink-0">
-                    <span className={`text-xl font-serif font-bold ${isPastDay ? "opacity-50 text-neutral-400" : "text-brand-400"}`}>
-                      {item.preco}
-                    </span>
-                  </div>
+            {menuItems.map((item, index) => (
+              <div key={index} className="py-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="space-y-1">
+                  <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-brand-500 block">
+                    {item.dia}
+                  </span>
+                  <h3 className="text-xl font-serif font-medium text-white">
+                    {item.prato}
+                  </h3>
+                  {item.comentario && (
+                    <p className="text-sm text-neutral-400">{item.comentario}</p>
+                  )}
                 </div>
-              );
-            })}
+                <div className="text-brand-400 font-serif text-xl font-bold">
+                  {item.preco}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
