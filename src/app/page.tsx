@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Navbar } from '@/components/Navbar';
 import { HeroSection } from '@/components/HeroSection';
+import { MenuMarquee } from '@/components/MenuMarquee';
 import { WeeklyMenuSection } from '@/components/WeeklyMenuSection';
 import { BookingSection } from '@/components/BookingSection';
 import { Footer } from '@/components/Footer';
@@ -26,6 +27,7 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#FAF8F5]">
       <Navbar />
       <HeroSection />
+      <MenuMarquee />
       <WeeklyMenuSection />
       <BookingSection />
       <Footer />
