@@ -20,9 +20,6 @@ export function Navbar() {
             <Link href="/menu" className="text-sm font-medium tracking-widest uppercase text-[#EAE6DF] hover:text-[#B33A2F] transition-colors">
               Menu
             </Link>
-            <Link href="#reservas" className="text-sm font-medium tracking-widest uppercase text-[#EAE6DF] hover:text-[#B33A2F] transition-colors">
-              Reservas
-            </Link>
           </div>
 
           {/* Botão de Reserva */}

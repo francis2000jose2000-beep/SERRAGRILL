@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
+export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Desativa cache estática
 
 export async function GET() {
