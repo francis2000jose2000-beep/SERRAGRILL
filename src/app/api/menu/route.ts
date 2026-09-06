@@ -3,7 +3,6 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0; // Desativa cache estática
 
 export async function GET() {
   try {
@@ -12,7 +11,7 @@ export async function GET() {
     const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
     if (!sheetId || !clientEmail || !privateKey) {
-      return NextResponse.json({ success: false, error: 'Credenciais em falta' }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Credenciais em falta nas variáveis de ambiente' }, { status: 500 });
     }
 
     const auth = new JWT({
@@ -25,18 +24,32 @@ export async function GET() {
     await doc.loadInfo();
     
     const sheet = doc.sheetsByTitle['Ementa'];
-    if (!sheet) return NextResponse.json({ success: false, error: 'Aba Ementa não encontrada' }, { status: 404 });
+    if (!sheet) {
+      return NextResponse.json({ success: false, error: 'Aba chamada "Ementa" não foi encontrada no documento!' }, { status: 404 });
+    }
 
     const rows = await sheet.getRows();
-    const menu = rows.map(row => ({
-      dia: row.get('Dia') || '',
-      prato: row.get('Prato') || '',
-      preco: row.get('Preco') || ''
-    }));
+    
+    // Mapeamento tolerável a maiúsculas/minúsculas e acentos
+    const menu = rows.map(row => {
+      const rowData = row.toObject() as Record<string, any>;
+      const findKey = (keys: string[]) => {
+        const found = Object.keys(rowData).find(k => keys.some(alt => k.toLowerCase().includes(alt.toLowerCase())));
+        return found ? rowData[found] : '';
+      };
+
+      return {
+        dia: findKey(['dia', 'day']) || '',
+        prato: findKey(['prato', 'dish', 'ementa', 'nome']) || '',
+        preco: findKey(['preco', 'preço', 'price', 'valor']) || ''
+      };
+    });
+
+    console.log('📊 Dados lidos do Sheets:', menu);
 
     return NextResponse.json({ success: true, menu });
-  } catch (error) {
-    console.error('Erro ao buscar menu:', error);
-    return NextResponse.json({ success: false, error: 'Erro interno' }, { status: 500 });
+  } catch (error: any) {
+    console.error('❌ Erro crítico ao buscar menu:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Erro interno' }, { status: 500 });
   }
 }
