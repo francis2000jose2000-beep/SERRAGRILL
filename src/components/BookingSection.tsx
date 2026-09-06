@@ -186,7 +186,6 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
           <button
             type="submit"
             disabled={isSubmitting}
-            onClick={handleSubmit}
             className={`w-full py-4 rounded-xl font-bold text-white transition-all ${
               isSubmitting ? 'bg-amber-800 cursor-not-allowed opacity-70' : 'bg-amber-600 hover:bg-amber-500'
             }`}
