@@ -1,12 +1,40 @@
+'use client';
+import { useEffect, useState } from 'react';
+
+interface MenuItem {
+  dia: string;
+  prato: string;
+  preco: string;
+  comentario: string;
+}
+
+const getDayNumber = (diaStr: string) => {
+  const d = diaStr.toLowerCase();
+  if (d.includes('segunda')) return 1;
+  if (d.includes('terça') || d.includes('terca')) return 2;
+  if (d.includes('quarta')) return 3;
+  if (d.includes('quinta')) return 4;
+  if (d.includes('sexta')) return 5;
+  if (d.includes('sábado') || d.includes('sabado')) return 6;
+  return 7;
+};
+
 export function WeeklyMenuSection() {
-  const weeklyMenu = [
-    { day: 'Segunda-feira', dish: 'Bife de Atum Braseado', price: '18.00 €', desc: 'Com sementes de sésamo e puré de batata doce.' },
-    { day: 'Terça-feira', dish: 'Arroz de Pato à Antiga', price: '14.00 €', desc: 'Com enchidos da região e gratinado no forno a lenha.' },
-    { day: 'Quarta-feira', dish: 'Bacalhau com Broa', price: '16.00 €', desc: 'Lombo de bacalhau envolto em broa de milho estaladiça.' },
-    { day: 'Quinta-feira', dish: 'Cabrito Assado', price: '22.00 €', desc: 'Assado lentamente, acompanhado com batata miúda e grelos.' },
-    { day: 'Sexta-feira', dish: 'Polvo à Lagareiro', price: '19.50 €', desc: 'Regado em azeite novo, alho e acompanhado com batata a murro.' },
-    { day: 'Sábado', dish: 'Posta Mirandesa', price: '24.00 €', desc: 'Naco de vitela na brasa com flor de sal e esparregado.' },
-  ];
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const currentDay = new Date().getDay();
+
+  useEffect(() => {
+    fetch('/api/menu', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.menu) {
+          setMenuItems(data.menu);
+        }
+        setIsLoading(false);
+      })
+      .catch(() => setIsLoading(false));
+  }, []);
 
   return (
     <section id="ementa-semanal" className="py-24 px-6 bg-[#FAF8F5] text-[#141210]">
@@ -20,26 +48,42 @@ export function WeeklyMenuSection() {
           </p>
         </div>
 
-        <div className="space-y-8">
-          {weeklyMenu.map((item, idx) => (
-            <div key={idx} className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[#EAE6DF] pb-4 group">
-              <div className="flex-1">
-                <span className="text-sm uppercase tracking-widest text-[#8F2E25] font-bold block mb-1">
-                  {item.day}
-                </span>
-                <h3 className="text-xl font-serif font-bold group-hover:text-[#8F2E25] transition-colors">
-                  {item.dish}
-                </h3>
-                <p className="text-[#5A554C] text-sm mt-1">{item.desc}</p>
-              </div>
-              <div className="mt-2 md:mt-0 pl-0 md:pl-4">
-                <span className="text-lg font-bold text-[#141210] whitespace-nowrap">
-                  {item.price}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="text-center text-[#8F2E25] animate-pulse font-serif py-8">A carregar ementa...</div>
+        ) : menuItems.length === 0 ? (
+          <div className="text-center text-neutral-500 py-6">Ainda não existem pratos registados.</div>
+        ) : (
+          <div className="space-y-8">
+            {menuItems.map((item, idx) => {
+              const dayNum = getDayNumber(item.dia);
+              const isPastDay = currentDay !== 0 && currentDay > dayNum;
+              const isToday = currentDay === dayNum;
+
+              return (
+                <div key={idx} className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-[#EAE6DF] pb-4 group">
+                  <div className="flex-1">
+                    <span className="text-sm uppercase tracking-widest text-[#8F2E25] font-bold block mb-1">
+                      {item.dia} {isToday && "— (Hoje)"}
+                    </span>
+                    <h3 className={`text-xl font-serif font-bold transition-colors ${isPastDay ? 'line-through opacity-40 text-neutral-400' : 'group-hover:text-[#8F2E25]'}`}>
+                      {item.prato}
+                    </h3>
+                    {item.comentario && (
+                      <p className={`text-sm mt-1 ${isPastDay ? 'opacity-30 text-neutral-500' : 'text-[#5A554C]'}`}>
+                        {item.comentario}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mt-2 md:mt-0 pl-0 md:pl-4">
+                    <span className={`text-lg font-bold whitespace-nowrap ${isPastDay ? 'opacity-40 text-neutral-400' : 'text-[#141210]'}`}>
+                      {item.preco}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );

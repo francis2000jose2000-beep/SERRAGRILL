@@ -3,15 +3,16 @@ import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function GET() {
   try {
-    const sheetId = process.env.GOOGLE_SHEET_ID;
+    const sheetId = process.env.GOOGLE_SHEET_ID_EMENTA || process.env.GOOGLE_SHEET_ID;
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     const privateKey = process.env.GOOGLE_PRIVATE_KEY;
 
     if (!sheetId || !clientEmail || !privateKey) {
-      return NextResponse.json({ success: false, error: 'Credenciais em falta nas variáveis de ambiente' }, { status: 500 });
+      return NextResponse.json({ success: false, error: 'Credenciais ou GOOGLE_SHEET_ID_EMENTA em falta no .env.local' }, { status: 500 });
     }
 
     const auth = new JWT({
@@ -23,31 +24,35 @@ export async function GET() {
     const doc = new GoogleSpreadsheet(sheetId, auth);
     await doc.loadInfo();
     
-    const sheet = doc.sheetsByTitle['Ementa'];
+    const sheet = doc.sheetsByTitle['Ementa'] || doc.sheetsByIndex[0];
     if (!sheet) {
-      return NextResponse.json({ success: false, error: 'Aba chamada "Ementa" não foi encontrada no documento!' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Aba da ementa não encontrada no documento configurado.' }, { status: 404 });
     }
 
-    const rows = await sheet.getRows();
+    await sheet.loadHeaderRow();
+    const rows = await sheet.getRows({ limit: 50 });
     
-    // Mapeamento tolerável a maiúsculas/minúsculas e acentos
-    const menu = rows.map(row => {
-      const rowData = row.toObject() as Record<string, any>;
-      const findKey = (keys: string[]) => {
-        const found = Object.keys(rowData).find(k => keys.some(alt => k.toLowerCase().includes(alt.toLowerCase())));
-        return found ? rowData[found] : '';
-      };
-
+    const menu = rows.map((row) => {
       return {
-        dia: findKey(['dia', 'day']) || '',
-        prato: findKey(['prato', 'dish', 'ementa', 'nome']) || '',
-        preco: findKey(['preco', 'preço', 'price', 'valor']) || ''
+        dia: String(row.get('Dia') || row.get('dia') || '').trim(),
+        prato: String(row.get('Prato') || row.get('prato') || '').trim(),
+        preco: String(row.get('Preco') || row.get('preço') || row.get('preco') || '').trim(),
+        comentario: String(row.get('Comentario') || row.get('comentário') || row.get('comentario') || '').trim()
       };
-    });
+    }).filter(item => item.prato !== '');
 
-    console.log('📊 Dados lidos do Sheets:', menu);
+    console.log(`📊 Ementa lida com sucesso da folha dedicada (${menu.length} pratos):`, menu);
 
-    return NextResponse.json({ success: true, menu });
+    return NextResponse.json(
+      { success: true, menu },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+        },
+      }
+    );
   } catch (error: any) {
     console.error('❌ Erro crítico ao buscar menu:', error);
     return NextResponse.json({ success: false, error: error.message || 'Erro interno' }, { status: 500 });
