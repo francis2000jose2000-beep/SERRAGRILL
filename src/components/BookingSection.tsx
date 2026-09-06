@@ -2,19 +2,13 @@
 
 import { useState, FormEvent } from 'react';
 import DateSelector from "@/components/DateSelector";
+import TimeSelector from "@/components/TimeSelector";
 
 export function BookingSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>('');
-
-  const timeSlots = [
-    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-    "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-    "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
-    "18:00", "18:30", "19:00", "19:30", "20:00", "20:30",
-    "21:00", "21:30", "22:00", "22:30"
-  ];
+  const [selectedTime, setSelectedTime] = useState<string>('');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,6 +17,12 @@ export function BookingSection() {
 
     if (!selectedDate) {
       setStatusMessage({ type: 'error', text: 'Por favor, selecione uma data para a reserva.' });
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!selectedTime) {
+      setStatusMessage({ type: 'error', text: 'Por favor, selecione uma hora para a reserva.' });
       setIsSubmitting(false);
       return;
     }
@@ -130,21 +130,15 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
                 <p className="text-red-400 text-xs mt-1">Por favor, selecione uma data para a reserva.</p>
               )}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-semibold tracking-widest text-[#A88849] uppercase">Hora</label>
-              <select 
-                required 
-                name="time" 
-                className="w-full bg-[#141210] border border-[#333] text-white px-4 py-3 focus:outline-none focus:border-[#C5A059] transition-colors"
-                defaultValue=""
-              >
-                <option value="" disabled>Selecione a hora</option>
-                {timeSlots.map((slot) => (
-                  <option key={slot} value={slot}>
-                    {slot}
-                  </option>
-                ))}
-              </select>
+              <TimeSelector 
+                onTimeSelect={(time) => setSelectedTime(time)} 
+              />
+              <input type="hidden" name="time" value={selectedTime} />
+              {!selectedTime && (
+                <p className="text-red-400 text-xs mt-1">Por favor, selecione uma hora para a reserva.</p>
+              )}
             </div>
           </div>
 
