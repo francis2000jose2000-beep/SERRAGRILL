@@ -62,12 +62,12 @@ export default function TimeSelector({
               type="button"
               disabled={isPassed}
               onClick={() => handleSelect(time)}
-              className={`py-2 px-1 rounded-lg border text-sm font-medium transition-all duration-200 ${
+              className={`px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 border ${
                 isPassed
-                  ? "opacity-50 line-through text-red-600 bg-red-50 cursor-not-allowed border-red-200 hover:bg-red-50 hover:border-red-200"
+                  ? "opacity-40 line-through text-red-400 bg-[#1A1816] border-red-900/30 cursor-not-allowed"
                   : isSelected
-                  ? "bg-[#8F2E25] text-white border-[#8F2E25]"
-                  : "text-[#141210] border-neutral-300 hover:border-[#8F2E25]"
+                  ? "bg-[#8F2E25] text-white border-[#8F2E25] font-bold shadow-sm"
+                  : "bg-[#1A1816] text-white border-[#2A2825] hover:border-[#8F2E25] hover:bg-[#221F1C]"
               }`}
             >
               {time}
