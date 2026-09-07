@@ -151,8 +151,9 @@ Ementa: ${dishes || 'Nenhuma preferência prévia'}`;
               </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-semibold tracking-widest text-[#8F2E25] uppercase">Hora</label>
-                <TimeSelector 
-                  onTimeSelect={(time) => setSelectedTime(time)} 
+                <TimeSelector
+                  selectedDate={selectedDate}
+                  onTimeSelect={(time) => setSelectedTime(time)}
                 />
                 <input type="hidden" name="time" value={selectedTime} />
                 {!selectedTime && (

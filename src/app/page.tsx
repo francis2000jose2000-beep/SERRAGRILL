@@ -5,7 +5,6 @@ import { Navbar } from '@/components/Navbar';
 import { HeroSection } from '@/components/HeroSection';
 import { MenuMarquee } from '@/components/MenuMarquee';
 import { MenuSection } from '@/components/MenuSection';
-import { WeeklyMenuSection } from '@/components/WeeklyMenuSection';
 import { BookingSection } from '@/components/BookingSection';
 import { Footer } from '@/components/Footer';
 
@@ -30,7 +29,6 @@ export default function HomePage() {
       <HeroSection />
       <MenuMarquee />
       <MenuSection />
-      <WeeklyMenuSection />
       <BookingSection />
       <Footer />
     </main>
