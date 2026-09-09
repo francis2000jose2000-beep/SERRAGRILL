@@ -35,7 +35,7 @@ export async function POST(request: Request) {
     try {
       await sheet.loadHeaderRow();
     } catch (e) {
-      await sheet.setHeaderRow(['Data/Hora', 'Mesa', 'Pedido', 'Total', 'Estado']);
+      await sheet.setHeaderRow(['Data/Hora', 'Mesa', 'Pedido', 'Valor', 'Estado']);
     }
 
     // Grava a nova linha no Excel
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       'Data/Hora': dataAtual,
       'Mesa': `Mesa ${mesa}`,
       'Pedido': pedido,
-      'Total': total || 'N/A',
+      'Valor': total || 'N/A',
       'Estado': 'Pendente'
     });
 
