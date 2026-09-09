@@ -15,14 +15,19 @@ const ITEMS_PER_PAGE = 15;
 function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
   const searchParams = useSearchParams();
   const mesaURL = searchParams.get('mesa');
-  
-  const [mesa, setMesa] = useState(mesaURL || '');
+
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
   const [currentPage, setCurrentPage] = useState(1);
   const [cart, setCart] = useState<{nome: string, qtd: number, preco: number}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pin, setPin] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [erroPin, setErroPin] = useState('');
+  const [mesaConectada, setMesaConectada] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const mesaConectadaDisplay = mesaConectada || (mesaURL ? `Mesa ${mesaURL}` : '');
 
   // 1. Extração de Categorias
   const categories = useMemo(() => {
@@ -52,8 +57,38 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
   // Handlers
   const handleSearch = (val: string) => { setSearch(val); setCurrentPage(1); };
   const handleCategory = (cat: string) => { setSelectedCategory(cat); setCurrentPage(1); };
+  const handlePinChange = (val: string) => {
+    setPin(val);
+    if (erroPin) setErroPin('');
+  };
+
+  const validarPin = async () => {
+    if (!pin.trim()) {
+      setErroPin('Introduza o código de acesso da mesa.');
+      return;
+    }
+    setErroPin('');
+    setIsVerifying(true);
+    try {
+      const res = await fetch('/api/verify-pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setMesaConectada(data.mesa);
+      } else {
+        setErroPin(data.error || 'PIN de acesso inválido.');
+      }
+    } catch (err) {
+      setErroPin('Falha de ligação ao validar PIN.');
+    }
+    setIsVerifying(false);
+  };
 
   const addToCart = (item: VendusItem) => {
+    if (!mesaConectada) return;
     setCart(prev => {
       const exists = prev.find(cartItem => cartItem.nome === item.nome);
       if (exists) return prev.map(cartItem => cartItem.nome === item.nome ? { ...cartItem, qtd: cartItem.qtd + 1 } : cartItem);
@@ -69,7 +104,10 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
   const cartTotal = cart.reduce((acc, item) => acc + (item.preco * item.qtd), 0);
 
   const submitOrder = async () => {
-    if (!mesa || cart.length === 0) return alert('Selecione uma mesa e adicione itens ao pedido.');
+    if (!mesaConectada) {
+      return;
+    }
+    if (cart.length === 0) return alert('Adicione itens ao pedido.');
     setIsSubmitting(true);
     
     const pedidoFormatado = cart.map(item => `${item.qtd}x ${item.nome}`).join('\n');
@@ -79,7 +117,7 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          mesa, 
+          pin,
           pedido: pedidoFormatado,
           total: `${cartTotal.toFixed(2)}€`
         })
@@ -88,6 +126,8 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
       if (res.ok) {
         setSuccess(true);
         setCart([]);
+      } else if (res.status === 401) {
+        alert('PIN inválido para esta mesa.');
       } else {
         alert('Erro ao enviar pedido. Chame um funcionário.');
       }
@@ -102,26 +142,54 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
       <div className="text-center py-20 animate-fade-in">
         <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl">✓</div>
         <h2 className="text-3xl font-serif text-[#141210] mb-4">Pedido Enviado!</h2>
-        <p className="text-neutral-500 mb-8">A nossa equipa já está a preparar o seu pedido para a Mesa {mesa}.</p>
+        <p className="text-neutral-500 mb-8">
+          {mesaConectadaDisplay ? `A nossa equipa já está a preparar o seu pedido para a ${mesaConectadaDisplay}.` : 'A nossa equipa já está a preparar o seu pedido.'}
+        </p>
         <button onClick={() => setSuccess(false)} className="text-[#8F2E25] font-bold underline hover:text-[#141210]">Fazer novo pedido</button>
       </div>
     );
   }
 
+  const conectado = !!mesaConectada;
+
   return (
     <div className="max-w-3xl mx-auto space-y-8 pb-40">
-      {/* SELEÇÃO DE MESA */}
+      {/* PIN DE ACESSO */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E0D5]">
         <label className="block text-sm font-bold text-[#141210] uppercase tracking-wider mb-3">A sua Mesa</label>
-        {mesaURL ? (
-          <div className="text-2xl font-serif text-[#8F2E25] font-bold">Mesa {mesaURL}</div>
+        {conectado ? (
+          <div className="flex items-center gap-2 text-[#141210] font-medium">
+            <span className="text-green-600">✅</span>
+            <span>Conectado com sucesso à {mesaConectada}</span>
+          </div>
         ) : (
-          <select value={mesa} onChange={(e) => setMesa(e.target.value)} className="w-full md:w-1/2 p-3 border border-neutral-300 rounded bg-white text-[#141210] font-medium focus:border-[#8F2E25] focus:ring-1 focus:ring-[#8F2E25] outline-none">
-            <option value="" className="text-neutral-400">Selecione o número da mesa...</option>
-            {Array.from({length: 15}, (_, i) => i + 1).map(num => (
-              <option key={num} value={num} className="text-[#141210]">Mesa {num}</option>
-            ))}
-          </select>
+          <>
+            <div className="flex items-stretch gap-2">
+              <input
+                type="password"
+                inputMode="numeric"
+                value={pin}
+                onChange={(e) => handlePinChange(e.target.value)}
+                placeholder="Insira o PIN fornecido pelo atendente..."
+                className={`flex-1 p-3 border rounded bg-white text-[#141210] font-medium outline-none transition-colors ${
+                  erroPin ? 'border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500' : 'border-neutral-300 focus:border-[#8F2E25] focus:ring-1 focus:ring-[#8F2E25]'
+                }`}
+              />
+              <button
+                onClick={validarPin}
+                disabled={isVerifying || !pin.trim()}
+                className="px-4 py-2 bg-[#8F2E25] text-white rounded font-bold uppercase tracking-wider hover:bg-[#6c231c] transition-colors disabled:opacity-50 whitespace-nowrap"
+              >
+                {isVerifying ? 'A validar...' : 'Validar PIN'}
+              </button>
+            </div>
+            {erroPin && (
+              <p className="mt-2 text-sm text-red-600 font-medium">{erroPin}</p>
+            )}
+            {!mesaURL && (
+              <p className="mt-2 text-sm text-neutral-500">Introduza o código de acesso fornecido pelo atendente para começar a encomendar.</p>
+            )}
+          </>
         )}
       </div>
 
@@ -149,7 +217,12 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
       </div>
 
       {/* LISTA DE ITENS */}
-      <div className="flex flex-col space-y-0 bg-white p-4 rounded-md shadow-sm border border-[#E6E0D5]">
+      <div className="relative flex flex-col space-y-0 bg-white p-4 rounded-md shadow-sm border border-[#E6E0D5]">
+        {!conectado && (
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center gap-2">
+            <span className="text-neutral-500 font-medium">Valida o teu PIN para poder encomendar.</span>
+          </div>
+        )}
         {paginatedItems.length === 0 ? (
           <div className="text-center py-8 text-neutral-500">Nenhum item encontrado.</div>
         ) : (
@@ -158,7 +231,12 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
               <span className="font-medium text-[#141210]">{item.nome}</span>
               <button 
                 onClick={() => addToCart(item)}
-                className="w-8 h-8 flex items-center justify-center bg-[#8F2E25] text-white rounded-full font-bold hover:bg-[#6c231c]"
+                disabled={!conectado}
+                className={`w-8 h-8 flex items-center justify-center rounded-full font-bold whitespace-nowrap transition-colors ${
+                  conectado
+                    ? 'bg-[#8F2E25] text-white hover:bg-[#6c231c]'
+                    : 'bg-neutral-300 text-neutral-400 cursor-not-allowed'
+                }`}
               >
                 +
               </button>
@@ -199,7 +277,7 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
               </div>
               <button 
                 onClick={submitOrder} 
-                disabled={isSubmitting || !mesa}
+                disabled={isSubmitting || !conectado}
                 className="w-full sm:w-auto bg-[#8F2E25] text-white px-6 py-3 rounded font-bold uppercase tracking-wider hover:bg-[#6c231c] transition-colors disabled:opacity-50 whitespace-nowrap"
               >
                 {isSubmitting ? 'A enviar...' : 'Enviar Pedido'}
