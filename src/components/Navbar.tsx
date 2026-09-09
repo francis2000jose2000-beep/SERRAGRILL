@@ -16,9 +16,12 @@ export function Navbar() {
           </div>
 
           {/* Links de Navegação (Desktop) */}
-          <div className="hidden md:flex items-center space-x-10">
+          <div className="hidden md:flex items-center space-x-8">
             <Link href="/menu" className="text-sm font-medium tracking-widest uppercase text-[#EAE6DF] hover:text-[#B33A2F] transition-colors">
               Menu
+            </Link>
+            <Link href="/pedir" className="px-4 py-2 border border-[#8F2E25] text-[#8F2E25] text-sm font-semibold tracking-widest uppercase hover:bg-[#8F2E25] hover:text-white transition-colors duration-300">
+              Pedir à Mesa
             </Link>
           </div>
 

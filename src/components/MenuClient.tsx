@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { VendusProduct } from '@/lib/vendus';
+
+const ITEMS_PER_PAGE = 20;
 
 function getCategoryName(product: any): string {
   return (
@@ -9,19 +11,8 @@ function getCategoryName(product: any): string {
     product.category?.title ||
     product.family?.title ||
     product.category ||
-    'Outros'
+    'Geral'
   );
-}
-
-function groupProductsByCategory(products: any[]): Record<string, any[]> {
-  return products.reduce((acc, product) => {
-    const categoryName = getCategoryName(product);
-    if (!acc[categoryName]) {
-      acc[categoryName] = [];
-    }
-    acc[categoryName].push(product);
-    return acc;
-  }, {} as Record<string, any[]>);
 }
 
 function parsePrice(item: any): string {
@@ -40,58 +31,62 @@ function parsePrice(item: any): string {
 }
 
 export function MenuClient({
-  categories,
   initialItems
 }: {
-  categories: string[];
+  categories?: string[];
   initialItems: VendusProduct[];
 }) {
+  const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Todas');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const filteredItems = initialItems.filter((item: any) => {
-    const categoryName = getCategoryName(item);
-    const matchesCategory = selectedCategory === 'Todas' || categoryName === selectedCategory;
-    const matchesSearch = (item.name || item.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    return matchesCategory && matchesSearch;
-  });
+  const categories = useMemo(() => {
+    const cats = new Set(initialItems.map((item) => getCategoryName(item)));
+    return ['Todas', ...Array.from(cats)];
+  }, [initialItems]);
 
-  const groupedProducts = groupProductsByCategory(filteredItems);
+  const filteredItems = useMemo(() => {
+    return initialItems.filter((item: any) => {
+      const categoryName = getCategoryName(item);
+      const matchesCategory = selectedCategory === 'Todas' || categoryName === selectedCategory;
+      const matchesSearch = (item.name || item.title || '').toLowerCase().includes(search.toLowerCase()) ||
+                            (item.description && item.description.toLowerCase().includes(search.toLowerCase()));
+      return matchesCategory && matchesSearch;
+    });
+  }, [initialItems, search, selectedCategory]);
+
+  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE) || 1;
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handleSearch = (val: string) => { setSearch(val); setCurrentPage(1); };
+  const handleCategory = (cat: string) => { setSelectedCategory(cat); setCurrentPage(1); };
 
   return (
-    <div className="space-y-10">
+    <div className="w-full">
       <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
         <div className="w-full md:w-80 relative">
           <input
             type="text"
             placeholder="Pesquisar no menu..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent border border-[#3a3530] text-[#f4f1ec] text-sm rounded-none px-4 py-3 pl-10 focus:border-[#B33A2F] outline-none transition placeholder:text-[#8a8279]"
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full bg-transparent border border-[#3a3530] text-[#f4f1ec] text-sm rounded-none px-4 py-3 pl-10 focus:border-[#8F2E25] outline-none transition placeholder:text-[#8a8279]"
           />
           <span className="absolute left-3.5 top-3.5 text-[#8a8279] text-sm">🔍</span>
         </div>
 
         <div className="w-full flex overflow-x-auto gap-2 pb-2 no-scrollbar">
-          <button
-            onClick={() => setSelectedCategory('Todas')}
-            className={`px-5 py-2 rounded-none text-xs font-medium tracking-wide uppercase whitespace-nowrap transition-all border ${
-              selectedCategory === 'Todas'
-                ? 'bg-[#B33A2F] text-[#141210] border-[#B33A2F]'
-                : 'bg-transparent border-[#3a3530] text-[#8a8279] hover:text-[#f4f1ec] hover:border-[#B33A2F]'
-            }`}
-          >
-            Todas
-          </button>
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => handleCategory(cat)}
               className={`px-5 py-2 rounded-none text-xs font-medium tracking-wide uppercase whitespace-nowrap transition-all border ${
                 selectedCategory === cat
-                  ? 'bg-[#B33A2F] text-[#141210] border-[#B33A2F]'
-                  : 'bg-transparent border-[#3a3530] text-[#8a8279] hover:text-[#f4f1ec] hover:border-[#B33A2F]'
+                  ? 'bg-[#8F2E25] text-white border-[#8F2E25]'
+                  : 'bg-transparent border-[#3a3530] text-[#8a8279] hover:text-[#f4f1ec] hover:border-[#8F2E25]'
               }`}
             >
               {cat}
@@ -100,41 +95,56 @@ export function MenuClient({
         </div>
       </div>
 
-      {filteredItems.length > 0 ? (
-        <div className="space-y-16">
-          {Object.entries(groupedProducts).map(([categoryName, items]) => (
-            <div key={categoryName} className="space-y-8">
-              <div className="border-b border-[#333] pb-4">
-                <h2 className="text-3xl font-serif font-bold text-[#F8F5F0]">
-                  {categoryName}
-                </h2>
+      {paginatedItems.length > 0 ? (
+        <div className="mt-10 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            {paginatedItems.map((item: any) => (
+              <div key={item.id} className="flex justify-between items-end border-b border-[#2A2825] pb-3 group">
+                <div className="flex-1 pr-4">
+                  <h3 className="text-lg font-serif font-medium text-[#EAE6DF] group-hover:text-[#8F2E25] transition-colors">
+                    {item.title || item.name}
+                  </h3>
+                  {item.description && (
+                    <p className="text-sm text-[#888] mt-1 line-clamp-2">
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <span className="text-[#8F2E25] font-bold whitespace-nowrap">
+                    {parsePrice(item)}
+                  </span>
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                {items.map((item: any) => (
-                  <div key={item.id} className="flex justify-between items-end border-b border-[#2A2825] pb-3 group">
-                    <div className="flex-1 pr-4">
-                      <h3 className="text-lg font-serif font-medium text-[#EAE6DF] group-hover:text-[#B33A2F] transition-colors">
-                        {item.title || item.name}
-                      </h3>
-                      {item.description && (
-                        <p className="text-sm text-[#888] mt-1 line-clamp-2">
-                          {item.description}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-[#B33A2F] font-bold whitespace-nowrap">
-                        {parsePrice(item)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="mt-12 flex items-center justify-between border-t border-[#2A2825] pt-6">
+              <button
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="text-neutral-400 hover:text-white disabled:opacity-30 transition-colors"
+              >
+                &larr; Anterior
+              </button>
+
+              <span className="text-neutral-500 font-serif text-sm">
+                Página <span className="text-white">{currentPage}</span> de {totalPages}
+              </span>
+
+              <button
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="text-neutral-400 hover:text-white disabled:opacity-30 transition-colors"
+              >
+                Próxima &rarr;
+              </button>
             </div>
-          ))}
+          )}
         </div>
       ) : (
-        <div className="text-center py-16 border border-[#3a3530]/60 rounded-none">
+        <div className="text-center py-16 border border-[#3a3530]/60">
           <p className="text-[#8a8279] text-sm font-['Playfair_Display'] italic">Nenhum prato encontrado com esses critérios.</p>
         </div>
       )}

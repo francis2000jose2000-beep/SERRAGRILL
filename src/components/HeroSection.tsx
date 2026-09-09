@@ -2,17 +2,20 @@
 
 export function HeroSection() {
   return (
-    <section className="relative w-full h-[85vh] flex items-center justify-center">
+    <section className="relative w-full h-[85vh] flex items-center justify-center select-none">
       <div className="absolute inset-0 w-full h-full">
         <img
           src="/RestaurantBanner.png"
           alt="Interior do Serra&amp;Grill"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover pointer-events-none"
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+          onContextMenu={(e) => e.preventDefault()}
         />
         <div className="absolute inset-0 bg-[#141210]/60" />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-6">
+      <div className="relative z-10 max-w-4xl mx-auto px-6 text-center space-y-6 select-none">
         <p className="text-[#B33A2F] uppercase tracking-[0.3em] text-sm font-semibold">
           Gastronomia de Excelência
         </p>

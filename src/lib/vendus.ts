@@ -17,7 +17,7 @@ export async function getVendusMenu(): Promise<{ categories: string[]; items: Ve
   }
 
   try {
-    const response = await fetch('https://www.vendus.pt/ws/v1.0/products', {
+    const response = await fetch('https://www.vendus.pt/ws/v1.0/products?limit=500', {
       headers: {
         'Authorization': 'Basic ' + Buffer.from(apiKey + ':').toString('base64'),
         'Content-Type': 'application/json',

@@ -12,17 +12,14 @@ const banners = [
   { title: 'Cocktails', src: '/galeria/foto7.jpg' },
 ];
 
-export const MenuMarquee: React.FC = () => {
+export function InfiniteCarousel() {
   return (
-    <section className="w-full overflow-hidden bg-[#141210] py-10 relative flex">
-      <div 
-        className="flex w-max animate-marquee" 
-        style={{ animationDuration: '60s', animationPlayState: 'running' }}
-      >
+    <div className="w-full overflow-hidden bg-[#141210] py-10 relative">
+      <div className="flex w-max animate-marquee hover:[animation-play-state:paused]">
         {[...banners, ...banners].map((item, index) => (
           <div
             key={index}
-            className="relative w-60 h-80 md:w-72 md:h-96 mx-3 flex-shrink-0 rounded-xl overflow-hidden bg-neutral-900 shadow-lg"
+            className="relative w-64 h-64 md:w-80 md:h-80 mx-4 flex-shrink-0 rounded-lg overflow-hidden bg-neutral-900"
           >
             <Image
               alt={item.title}
@@ -43,6 +40,6 @@ export const MenuMarquee: React.FC = () => {
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
-};
+}
