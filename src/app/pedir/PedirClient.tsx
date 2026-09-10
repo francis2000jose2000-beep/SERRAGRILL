@@ -27,7 +27,78 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
   const [mesaConectada, setMesaConectada] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const [mesas, setMesas] = useState<{mesa: string, ocupada: boolean, conectados: number}[]>([]);
+  const [loadingMesas, setLoadingMesas] = useState(true);
+  const [modalAberto, setModalAberto] = useState(false);
+  const [modalType, setModalType] = useState<'bloquear' | 'validar'>('bloquear');
+  const [mesaSelecionada, setMesaSelecionada] = useState<string | null>(null);
+  const [modalPin, setModalPin] = useState('');
+  const [erroModal, setErroModal] = useState('');
+  const [isSubmittingModal, setIsSubmittingModal] = useState(false);
+  const [conectadosAtual, setConectadosAtual] = useState<number | null>(null);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [tableAction, setTableAction] = useState<'bloquear' | 'validar' | null>(null);
+
   const mesaConectadaDisplay = mesaConectada || (mesaURL ? `Mesa ${mesaURL}` : '');
+
+  useEffect(() => {
+    let id = localStorage.getItem('deviceId');
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem('deviceId', id);
+    }
+    setDeviceId(id);
+
+    const fetchMesas = () => {
+      fetch('/api/mesas')
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setMesas(data.map((item: any) => ({
+              mesa: String(item.mesa || '').trim(),
+              ocupada: Boolean(item.ocupada),
+              conectados: Number(item.conectados ?? 0),
+            })));
+          }
+          setLoadingMesas(false);
+        })
+        .catch(err => {
+          console.error('Erro ao carregar mesas:', err);
+          setLoadingMesas(false);
+        });
+    };
+
+    const mesaGuardada = localStorage.getItem('mesaConectada');
+    const pinGuardado = localStorage.getItem('pin');
+    if (mesaGuardada && pinGuardado) {
+      fetch('/api/mesas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'validar', mesa: mesaGuardada, pin: pinGuardado, deviceId: id })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setPin(pinGuardado);
+            setMesaConectada(mesaGuardada);
+            setTableAction('validar');
+            setConectadosAtual(Number(data.conectados ?? 0));
+          } else {
+            localStorage.removeItem('mesaConectada');
+            localStorage.removeItem('pin');
+          }
+          fetchMesas();
+        })
+        .catch(err => {
+          console.error('Auto-login falhou:', err);
+          localStorage.removeItem('mesaConectada');
+          localStorage.removeItem('pin');
+          fetchMesas();
+        });
+    } else {
+      fetchMesas();
+    }
+  }, []);
 
   // 1. Extração de Categorias
   const categories = useMemo(() => {
@@ -62,6 +133,60 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
     if (erroPin) setErroPin('');
   };
 
+  const abrirModalBloquear = (mesa: string) => {
+    setModalType('bloquear');
+    setMesaSelecionada(mesa);
+    setModalPin('');
+    setErroModal('');
+    setModalAberto(true);
+  };
+
+  const abrirModalValidar = (mesa: string) => {
+    setModalType('validar');
+    setMesaSelecionada(mesa);
+    setModalPin('');
+    setErroModal('');
+    setModalAberto(true);
+  };
+
+  const submeterModal = async () => {
+    if (!modalPin || !/^\d{4}$/.test(modalPin)) {
+      setErroModal('Introduza um PIN de 4 dígitos.');
+      return;
+    }
+    if (!mesaSelecionada) return;
+    if (!deviceId) {
+      setErroModal('Erro ao obter deviceId. Recarregue a página.');
+      return;
+    }
+
+    setIsSubmittingModal(true);
+    setErroModal('');
+    try {
+      const res = await fetch('/api/mesas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: modalType, mesa: mesaSelecionada, pin: modalPin, deviceId })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setPin(modalPin);
+        setMesaConectada(mesaSelecionada);
+        setTableAction(modalType);
+        setConectadosAtual(Number(data.conectados ?? 1));
+        localStorage.setItem('mesaConectada', mesaSelecionada);
+        localStorage.setItem('pin', modalPin);
+        setModalAberto(false);
+        setModalPin('');
+      } else {
+        setErroModal(data.error || 'Erro ao processar ação.');
+      }
+    } catch (err) {
+      setErroModal('Falha de ligação.');
+    }
+    setIsSubmittingModal(false);
+  };
+
   const validarPin = async () => {
     if (!pin.trim()) {
       setErroPin('Introduza o código de acesso da mesa.');
@@ -78,6 +203,9 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
       const data = await res.json();
       if (res.ok && data.success) {
         setMesaConectada(data.mesa);
+        setTableAction('validar');
+        localStorage.setItem('mesaConectada', data.mesa);
+        localStorage.setItem('pin', pin);
       } else {
         setErroPin(data.error || 'PIN de acesso inválido.');
       }
@@ -85,6 +213,34 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
       setErroPin('Falha de ligação ao validar PIN.');
     }
     setIsVerifying(false);
+  };
+
+  const sairDaMesa = async () => {
+    if (mesaConectada && deviceId) {
+      try {
+        const res = await fetch('/api/mesas', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'desconectar', mesa: mesaConectada, deviceId })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.conectados === 0) {
+            localStorage.removeItem('mesaConectada');
+            localStorage.removeItem('pin');
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao desconectar:', err);
+      }
+    }
+    localStorage.removeItem('mesaConectada');
+    localStorage.removeItem('pin');
+    setMesaConectada(null);
+    setPin('');
+    setConectadosAtual(null);
+    setTableAction(null);
+    setCart([]);
   };
 
   const addToCart = (item: VendusItem) => {
@@ -154,15 +310,27 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 pb-40">
-      {/* PIN DE ACESSO */}
+      {/* PIN DE ACESSO / SELETOR DE MESA */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-[#E6E0D5]">
         <label className="block text-sm font-bold text-[#141210] uppercase tracking-wider mb-3">A sua Mesa</label>
         {conectado ? (
-          <div className="flex items-center gap-2 text-[#141210] font-medium">
-            <span className="text-green-600">✅</span>
-            <span>Conectado com sucesso à {mesaConectada}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[#141210] font-medium">
+              <span className="text-green-600">✅</span>
+              <span>
+                {tableAction === 'bloquear'
+                  ? 'Mesa trancada com sucesso! Já podes fazer o teu pedido.'
+                  : `Conectado à ${mesaConectada}`}
+              </span>
+            </div>
+            <button
+              onClick={sairDaMesa}
+              className="text-xs text-neutral-500 hover:text-[#8F2E25] underline"
+            >
+              Sair da Mesa
+            </button>
           </div>
-        ) : (
+        ) : mesaURL ? (
           <>
             <div className="flex items-stretch gap-2">
               <input
@@ -186,67 +354,91 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
             {erroPin && (
               <p className="mt-2 text-sm text-red-600 font-medium">{erroPin}</p>
             )}
-            {!mesaURL && (
-              <p className="mt-2 text-sm text-neutral-500">Introduza o código de acesso fornecido pelo atendente para começar a encomendar.</p>
+            <p className="mt-2 text-sm text-neutral-500">Introduza o código de acesso fornecido pelo atendente para começar a encomendar.</p>
+          </>
+        ) : (
+          <>
+            {loadingMesas ? (
+              <div className="text-center text-neutral-500 py-8">A carregar mesas...</div>
+            ) : (
+               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {mesas.map((m, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => m.ocupada ? abrirModalValidar(m.mesa) : abrirModalBloquear(m.mesa)}
+                    className={`p-4 rounded-lg font-bold text-lg transition-transform hover:scale-105 flex flex-col items-center justify-center gap-1 ${
+                      m.ocupada 
+                        ? 'bg-red-100 text-red-700 border-2 border-red-300 hover:bg-red-200' 
+                        : 'bg-green-100 text-green-700 border-2 border-green-300 hover:bg-green-200'
+                    }`}
+                  >
+                    <span>{m.mesa}</span>
+                    {m.ocupada && (
+                      <span className="text-xs font-semibold bg-red-200 text-red-800 px-2 py-0.5 rounded-full">
+                        👥 {m.conectados}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
             )}
+            <p className="mt-2 text-sm text-neutral-500">Selecione a sua mesa para começar a encomendar.</p>
           </>
         )}
       </div>
 
       {/* FILTROS E PESQUISA */}
-      <div className="space-y-4">
-        <input 
-          type="text" 
-          placeholder="Pesquisar pedido (ex: Água, Bitoque)..." 
-          value={search}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="w-full p-4 border border-neutral-300 rounded-md focus:border-[#8F2E25] focus:ring-1 focus:ring-[#8F2E25] outline-none text-[#141210]"
-        />
-        <div className="flex flex-wrap gap-2">
-          {categories.map(cat => (
-            <button 
-              key={cat} onClick={() => handleCategory(cat)}
-              className={`px-4 py-2 text-sm rounded-full border transition-colors ${
-                selectedCategory === cat ? 'bg-[#8F2E25] border-[#8F2E25] text-white' : 'bg-transparent border-neutral-300 text-neutral-600 hover:border-[#8F2E25]'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* LISTA DE ITENS */}
-      <div className="relative flex flex-col space-y-0 bg-white p-4 rounded-md shadow-sm border border-[#E6E0D5]">
-        {!conectado && (
-          <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center gap-2">
-            <span className="text-neutral-500 font-medium">Valida o teu PIN para poder encomendar.</span>
-          </div>
-        )}
-        {paginatedItems.length === 0 ? (
-          <div className="text-center py-8 text-neutral-500">Nenhum item encontrado.</div>
-        ) : (
-          paginatedItems.map((item, idx) => (
-            <div key={idx} className="flex justify-between items-center py-4 border-b border-[#E6E0D5] last:border-0">
-              <span className="font-medium text-[#141210]">{item.nome}</span>
+      {conectado && (
+        <div className="space-y-4">
+          <input 
+            type="text" 
+            placeholder="Pesquisar pedido (ex: Água, Bitoque)..." 
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full p-4 border border-neutral-300 rounded-md focus:border-[#8F2E25] focus:ring-1 focus:ring-[#8F2E25] outline-none text-[#141210]"
+          />
+          <div className="flex flex-wrap gap-2">
+            {categories.map(cat => (
               <button 
-                onClick={() => addToCart(item)}
-                disabled={!conectado}
-                className={`w-8 h-8 flex items-center justify-center rounded-full font-bold whitespace-nowrap transition-colors ${
-                  conectado
-                    ? 'bg-[#8F2E25] text-white hover:bg-[#6c231c]'
-                    : 'bg-neutral-300 text-neutral-400 cursor-not-allowed'
+                key={cat} onClick={() => handleCategory(cat)}
+                className={`px-4 py-2 text-sm rounded-full border transition-colors ${
+                  selectedCategory === cat ? 'bg-[#8F2E25] border-[#8F2E25] text-white' : 'bg-transparent border-neutral-300 text-neutral-600 hover:border-[#8F2E25]'
                 }`}
               >
-                +
+                {cat}
               </button>
-            </div>
-          ))
-        )}
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* LISTA DE ITENS */}
+      {conectado && (
+        <div className="relative flex flex-col space-y-0 bg-white p-4 rounded-md shadow-sm border border-[#E6E0D5]">
+          {paginatedItems.length === 0 ? (
+            <div className="text-center py-8 text-neutral-500">Nenhum item encontrado.</div>
+          ) : (
+            paginatedItems.map((item, idx) => (
+              <div key={idx} className="flex justify-between items-center py-4 border-b border-[#E6E0D5] last:border-0">
+                <span className="font-medium text-[#141210]">{item.nome}</span>
+                <button 
+                  onClick={() => addToCart(item)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-full font-bold whitespace-nowrap transition-colors ${
+                    conectado
+                      ? 'bg-[#8F2E25] text-white hover:bg-[#6c231c]'
+                      : 'bg-neutral-300 text-neutral-400 cursor-not-allowed'
+                  }`}
+                >
+                  +
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* PAGINAÇÃO */}
-      {totalPages > 1 && (
+      {conectado && totalPages > 1 && (
         <div className="flex items-center justify-between pt-4">
           <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="text-neutral-500 hover:text-[#8F2E25] disabled:opacity-30">Anterior</button>
           <span className="text-neutral-600">Página <b>{currentPage}</b> de {totalPages}</span>
@@ -255,7 +447,7 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
       )}
 
       {/* CARRINHO NO FUNDO */}
-      {cart.length > 0 && (
+      {cart.length > 0 && conectado && (
         <div className="fixed bottom-0 left-0 right-0 bg-[#141210] p-6 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-50">
           <div className="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
             
@@ -284,6 +476,46 @@ function OrderFormContent({ initialItems }: { initialItems: VendusItem[] }) {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE PIN */}
+      {modalAberto && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
+            <h3 className="text-xl font-serif font-bold text-[#141210] mb-4">
+              {modalType === 'bloquear' ? `Reservar ${mesaSelecionada}` : `Validar acesso à ${mesaSelecionada}`}
+            </h3>
+            <p className="text-neutral-600 mb-4">
+              {modalType === 'bloquear' 
+                ? 'Defina um PIN de 4 dígitos para reservar esta mesa.' 
+                : 'Esta mesa está ocupada. Insira o PIN para aceder aos seus pedidos.'}
+            </p>
+            <input
+              type="password"
+              inputMode="numeric"
+              value={modalPin}
+              onChange={(e) => setModalPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="Introduza o PIN..."
+              className="w-full p-3 border border-neutral-300 rounded bg-white text-[#141210] font-medium text-center text-2xl tracking-widest outline-none focus:border-[#8F2E25] focus:ring-1 focus:ring-[#8F2E25]"
+            />
+            {erroModal && <p className="mt-2 text-sm text-red-600 font-medium">{erroModal}</p>}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setModalAberto(false)}
+                className="flex-1 px-4 py-2 border border-neutral-300 rounded font-bold text-neutral-600 hover:bg-neutral-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={submeterModal}
+                disabled={isSubmittingModal || modalPin.length !== 4}
+                className="flex-1 px-4 py-2 bg-[#8F2E25] text-white rounded font-bold uppercase tracking-wider hover:bg-[#6c231c] transition-colors disabled:opacity-50"
+              >
+                {isSubmittingModal ? 'A processar...' : (modalType === 'bloquear' ? 'Trancar Mesa' : 'Entrar')}
+              </button>
+            </div>
           </div>
         </div>
       )}
